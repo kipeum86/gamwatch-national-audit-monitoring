@@ -112,8 +112,14 @@ def run_pipeline():
             if video.source == "manual":
                 sheets.update_manual_queue_status(video.url, "processing")
 
-            # 2. 자막 추출
-            subtitle_text, subtitle_source = extract_subtitles(video.video_id)
+            # 2. 자막 추출 (외부 전달된 자막 우선 사용)
+            pre_subtitle = os.environ.get("SUBTITLE_DATA", "").strip()
+            if pre_subtitle:
+                subtitle_text = _decompress_subtitle(pre_subtitle)
+                subtitle_source = "browser_extracted"
+                logger.info("외부 전달 자막 사용 (%d자)", len(subtitle_text))
+            else:
+                subtitle_text, subtitle_source = extract_subtitles(video.video_id)
 
             if subtitle_text is None:
                 logger.info("자막 없음 — 스킵: %s", video.video_id)
@@ -244,6 +250,18 @@ def _write_results(sheets: SheetsClient, video, subtitle_source: str, agendas_ra
         "Sheets 기록: 안건 %d, 발언 %d, 기사 %d",
         len(agenda_records), len(statement_records), len(article_records),
     )
+
+
+def _decompress_subtitle(data: str) -> str:
+    """브라우저에서 gzip+base64로 압축된 자막을 해제한다."""
+    import base64
+    import gzip
+    try:
+        raw = base64.b64decode(data)
+        return gzip.decompress(raw).decode("utf-8")
+    except Exception:
+        # 압축 안 된 평문일 수도 있음
+        return data
 
 
 if __name__ == "__main__":

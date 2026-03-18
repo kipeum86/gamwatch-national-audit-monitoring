@@ -1,9 +1,17 @@
 /**
- * GamWatch 파이프라인 트리거 + 상태 모니터링 + 설정.
+ * GamWatch 파이프라인 트리거 + 상태 모니터링 + 설정 + 자막 추출.
  */
 
 let _pollTimer = null;
 let _pipelineStartTime = null;
+
+// 자막 자동추출에 사용할 Invidious 인스턴스 목록
+const INVIDIOUS_INSTANCES = [
+  'https://inv.nadeko.net',
+  'https://invidious.fdn.fr',
+  'https://iv.datura.network',
+  'https://invidious.protokolla.fi',
+];
 
 // ──────────────────────────────────────────────
 // 전체 파이프라인 실행
@@ -36,6 +44,12 @@ function openManualModal() {
   document.getElementById('manual-modal').style.display = 'flex';
   const today = new Date().toISOString().slice(0, 10);
   document.getElementById('manual-date').value = today;
+  // 이전 상태 초기화
+  _setSubtitleStatus('');
+  document.getElementById('manual-subtitle-area').style.display = 'none';
+  document.getElementById('manual-subtitle').value = '';
+  document.getElementById('btn-manual-submit').disabled = false;
+  document.getElementById('btn-manual-submit').textContent = '분석 요청';
 }
 
 function closeManualModal() {
@@ -59,6 +73,71 @@ async function submitManualVideo() {
     return;
   }
 
+  const videoId = _extractVideoId(url);
+  if (!videoId) {
+    showNotification('유튜브 URL에서 영상 ID를 추출할 수 없습니다.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btn-manual-submit');
+  btn.disabled = true;
+  btn.textContent = '자막 추출 중...';
+
+  // 1단계: 자막 추출 시도
+  _setSubtitleStatus('자막을 자동으로 추출하고 있습니다...');
+  let subtitleText = await _fetchSubtitle(videoId);
+
+  // 자동추출 실패 → 수동 입력 확인
+  if (!subtitleText) {
+    const manualArea = document.getElementById('manual-subtitle-area');
+    const manualText = document.getElementById('manual-subtitle').value.trim();
+
+    if (manualArea.style.display === 'none') {
+      // 처음 실패: 수동 입력 안내 표시
+      manualArea.style.display = 'block';
+      _setSubtitleStatus('자동 추출에 실패했습니다. 아래에 자막을 직접 붙여넣어 주세요.');
+      btn.disabled = false;
+      btn.textContent = '분석 요청';
+      return;
+    }
+
+    if (!manualText) {
+      showNotification('자막 텍스트를 붙여넣어 주세요.', 'error');
+      btn.disabled = false;
+      btn.textContent = '분석 요청';
+      return;
+    }
+
+    subtitleText = manualText;
+  }
+
+  // 2단계: 자막 압축 + 워크플로우 디스패치
+  _setSubtitleStatus(`자막 추출 완료 (${subtitleText.length.toLocaleString()}자). 분석 요청 중...`);
+  btn.textContent = '분석 요청 중...';
+
+  let subtitleData;
+  try {
+    subtitleData = await _compressText(subtitleText);
+  } catch (e) {
+    console.error('Compression failed:', e);
+    // 압축 실패시 원문 전달 (65K 이하인 경우)
+    if (subtitleText.length <= 60000) {
+      subtitleData = subtitleText;
+    } else {
+      showNotification('자막이 너무 깁니다. 텍스트를 줄여서 다시 시도해 주세요.', 'error');
+      btn.disabled = false;
+      btn.textContent = '분석 요청';
+      return;
+    }
+  }
+
+  if (subtitleData.length > 65000) {
+    showNotification('자막 데이터가 너무 큽니다. 더 짧은 영상으로 시도해 주세요.', 'error');
+    btn.disabled = false;
+    btn.textContent = '분석 요청';
+    return;
+  }
+
   const codeMap = {
     '정무위원회': 'jungmu',
     '과학기술정보방송통신위원회': 'gwabang',
@@ -73,6 +152,7 @@ async function submitManualVideo() {
     committee: committee,
     committee_code: codeMap[committee] || 'etc',
     event_date: date,
+    subtitle_data: subtitleData,
   };
 
   const success = await _dispatchWorkflow(inputs);
@@ -80,7 +160,146 @@ async function submitManualVideo() {
     closeManualModal();
     document.getElementById('manual-url').value = '';
     document.getElementById('manual-committee').value = '';
+    document.getElementById('manual-subtitle').value = '';
     _startStatusPolling();
+  } else {
+    btn.disabled = false;
+    btn.textContent = '분석 요청';
+  }
+}
+
+// ──────────────────────────────────────────────
+// 자막 추출 (Invidious API)
+// ──────────────────────────────────────────────
+
+function _extractVideoId(url) {
+  const patterns = [
+    /(?:v=|\/v\/|\/live\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+    /^([a-zA-Z0-9_-]{11})$/,
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+async function _fetchSubtitle(videoId) {
+  for (const instance of INVIDIOUS_INSTANCES) {
+    try {
+      console.log(`Trying subtitle from: ${instance}`);
+
+      // 1. 자막 목록 조회
+      const listRes = await fetch(`${instance}/api/v1/captions/${videoId}`, {
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!listRes.ok) continue;
+
+      const data = await listRes.json();
+      const captions = data.captions || [];
+      if (!captions.length) continue;
+
+      // 한국어 자막 찾기
+      const koCaption = captions.find(c =>
+        c.language_code === 'ko' || c.languageCode === 'ko' ||
+        (c.label && c.label.includes('Korean'))
+      );
+      if (!koCaption) continue;
+
+      // 2. 자막 내용 다운로드
+      const captionUrl = koCaption.url.startsWith('http')
+        ? koCaption.url
+        : `${instance}${koCaption.url}`;
+
+      const captionRes = await fetch(captionUrl, {
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!captionRes.ok) continue;
+
+      const vttText = await captionRes.text();
+      const parsed = _parseVtt(vttText);
+      if (parsed && parsed.length > 100) {
+        console.log(`Subtitle fetched from ${instance}: ${parsed.length} chars`);
+        return parsed;
+      }
+    } catch (e) {
+      console.warn(`Invidious ${instance} failed:`, e.message);
+      continue;
+    }
+  }
+  return null;
+}
+
+function _parseVtt(vttText) {
+  const lines = vttText.split('\n');
+  const textLines = [];
+  let prevLine = '';
+
+  for (let line of lines) {
+    line = line.trim();
+    if (!line) continue;
+    if (line.startsWith('WEBVTT')) continue;
+    if (line.startsWith('Kind:') || line.startsWith('Language:')) continue;
+    if (line.startsWith('NOTE')) continue;
+    if (/^\d{2}:\d{2}:\d{2}\.\d{3}\s*-->/.test(line)) continue;
+    if (/^\d+$/.test(line)) continue;
+
+    // HTML/VTT 태그 제거
+    let cleaned = line.replace(/<[^>]+>/g, '').trim();
+    if (!cleaned) continue;
+
+    // 중복 제거
+    if (cleaned === prevLine) continue;
+
+    textLines.push(cleaned);
+    prevLine = cleaned;
+  }
+
+  return textLines.join('\n');
+}
+
+// ──────────────────────────────────────────────
+// 텍스트 압축 (gzip + base64)
+// ──────────────────────────────────────────────
+
+async function _compressText(text) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+
+  const cs = new CompressionStream('gzip');
+  const writer = cs.writable.getWriter();
+  writer.write(data);
+  writer.close();
+
+  const reader = cs.readable.getReader();
+  const chunks = [];
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+  }
+
+  const totalLen = chunks.reduce((acc, c) => acc + c.length, 0);
+  const compressed = new Uint8Array(totalLen);
+  let offset = 0;
+  for (const chunk of chunks) {
+    compressed.set(chunk, offset);
+    offset += chunk.length;
+  }
+
+  // base64 인코딩
+  let binary = '';
+  for (let i = 0; i < compressed.length; i++) {
+    binary += String.fromCharCode(compressed[i]);
+  }
+  return btoa(binary);
+}
+
+function _setSubtitleStatus(msg) {
+  const el = document.getElementById('manual-subtitle-status');
+  if (el) {
+    el.textContent = msg;
+    el.style.display = msg ? 'block' : 'none';
   }
 }
 
@@ -91,9 +310,7 @@ async function submitManualVideo() {
 function _startStatusPolling() {
   _pipelineStartTime = Date.now();
   _showStatus('running', '파이프라인 시작 요청 중...', '');
-  // 첫 체크는 10초 후 (GitHub가 run을 생성하는 데 시간이 걸림)
   setTimeout(() => _pollStatus(), 10000);
-  // 이후 15초마다 폴링
   if (_pollTimer) clearInterval(_pollTimer);
   _pollTimer = setInterval(() => _pollStatus(), 15000);
 }
@@ -117,7 +334,6 @@ async function _pollStatus() {
     const elapsed = _formatElapsed(Date.now() - _pipelineStartTime);
     const runUrl = run.html_url;
 
-    // 상태 매핑
     if (run.status === 'queued') {
       _showStatus('running', '파이프라인 대기 중...', elapsed, runUrl);
     } else if (run.status === 'in_progress') {
@@ -126,7 +342,6 @@ async function _pollStatus() {
       _stopPolling();
       if (run.conclusion === 'success') {
         _showStatus('success', '파이프라인 완료! 페이지를 새로고침하면 결과를 확인할 수 있습니다.', elapsed, runUrl);
-        // 5초 후 자동 새로고침 안내
         setTimeout(() => {
           if (confirm('파이프라인이 완료되었습니다. 페이지를 새로고침할까요?')) {
             location.reload();

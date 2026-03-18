@@ -21,6 +21,10 @@ on:
         description: '행사 일자 (YYYY-MM-DD)'
         required: false
         default: ''
+      subtitle_data:
+        description: '브라우저에서 추출한 자막 (gzip+base64)'
+        required: false
+        default: ''
 
 jobs:
   process:
@@ -61,6 +65,7 @@ jobs:
           MANUAL_COMMITTEE: ${{ github.event.inputs.committee }}
           MANUAL_COMMITTEE_CODE: ${{ github.event.inputs.committee_code }}
           MANUAL_EVENT_DATE: ${{ github.event.inputs.event_date }}
+          SUBTITLE_DATA: ${{ github.event.inputs.subtitle_data }}
         run: python -m pipeline.main
 
       - name: Cleanup credentials
