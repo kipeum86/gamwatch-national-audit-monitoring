@@ -84,7 +84,6 @@ function generateReport() {
     return;
   }
 
-  // 선택된 안건 ID 수집
   const checkboxes = document.querySelectorAll('#report-agenda-list input[type="checkbox"]:checked');
   const selectedIds = new Set(Array.from(checkboxes).map(cb => cb.value));
 
@@ -102,11 +101,12 @@ function generateReport() {
 }
 
 // ──────────────────────────────────────────────
-// Slack 브리핑 양식
+// 보고서 양식 (실제 Slack 브리핑 스타일)
 // ──────────────────────────────────────────────
 
 function formatReport(date, agendas) {
   const formattedDate = formatDateKorean(date);
+  const dateRef = _getDateRef(date);
 
   // 상임위별 그룹핑
   const byCommittee = {};
@@ -117,12 +117,22 @@ function formatReport(date, agendas) {
 
   let report = '';
 
-  // ── 인사말 ──
-  report += `안녕하세요. ${formattedDate} 진행된 주요 상임위 국정감사 내용 공유드립니다.\n\n`;
+  // ── 1. 인사말 ──
+  report += `안녕하세요. ${dateRef}(${formattedDate}) 진행된 주요 상임위 국정감사 내용(게임 및 IT 관련) 정리하여 안내드립니다.\n\n`;
 
-  // ── 상임위별 상세 ──
+  // ── 2. 상임위별 요약 (1-2줄) ──
   for (const [comm, items] of Object.entries(byCommittee)) {
-    report += `[${comm}]\n\n`;
+    const summaries = items.map(a => a.summary || a.title).join(', ');
+    report += `${comm}: ${summaries}\n`;
+  }
+
+  report += `\n자세한 사항은 아래 내용 참고 부탁드립니다. 감사합니다.\n\n\n`;
+
+  // ── 3. 상세 내용 ──
+  for (const [comm, items] of Object.entries(byCommittee)) {
+    // 상임위 헤더 + △안건 목록
+    const topicList = items.map(a => `△${a.title}`).join(', ');
+    report += `${comm}: ${topicList}\n`;
 
     items.forEach((agenda, idx) => {
       report += `${idx + 1}. ${agenda.title}\n`;
@@ -130,35 +140,40 @@ function formatReport(date, agendas) {
       // 발언자
       agenda.statements.forEach(s => {
         const party = s.speaker_party ? `(${s.speaker_party})` : '';
-        if (s.speaker_role === 'questioner') {
-          report += `   - ${party}${s.speaker_name}: ${s.content}\n`;
-        } else {
-          report += `   - ${s.speaker_name}: ${s.content}\n`;
-        }
+        const role = s.speaker_role === 'questioner' ? ' 의원' : '';
+        report += ` - ${party}${s.speaker_name}${role}: ${s.content}\n`;
       });
 
       // 게임사 언급
       if (agenda.isCompanyMentioned && agenda.company_mention_detail) {
-        report += `   ★ 게임사 언급: ${agenda.company_mention_detail}\n`;
+        report += `  ※ ${agenda.company_mention_detail}\n`;
       }
 
       report += '\n';
     });
   }
 
-  // ── 관련 기사 ──
+  // ── 4. 주요 기사 ──
   const allNews = agendas.flatMap(a => a.newsArticles || []);
   if (allNews.length > 0) {
-    report += '[관련 기사]\n';
+    report += '주요 기사\n';
     allNews.forEach((n, idx) => {
       report += `${idx + 1}. ${n.title}\n`;
-      report += `   ${n.url}\n`;
+      report += ` - ${n.url}\n\n`;
     });
-    report += '\n';
   }
 
-  report += '감사합니다.';
-  return report;
+  return report.trimEnd();
+}
+
+function _getDateRef(dateStr) {
+  const target = new Date(dateStr + 'T00:00:00');
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diff = Math.round((today - target) / (1000 * 60 * 60 * 24));
+  if (diff === 0) return '금일';
+  if (diff === 1) return '어제';
+  return '';
 }
 
 function formatDateKorean(dateStr) {
@@ -167,7 +182,7 @@ function formatDateKorean(dateStr) {
   const month = d.getMonth() + 1;
   const day = d.getDate();
   const dayName = days[d.getDay()];
-  return `${month}월 ${day}일(${dayName})`;
+  return `${month}/${day}(${dayName})`;
 }
 
 async function copyReport() {
