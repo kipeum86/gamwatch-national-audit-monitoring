@@ -129,12 +129,14 @@ function populateFilters() {
   });
 
   const reportComm = document.getElementById('report-committee');
-  committees.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c;
-    opt.textContent = c;
-    reportComm.appendChild(opt);
-  });
+  if (reportComm) {
+    committees.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = c;
+      reportComm.appendChild(opt);
+    });
+  }
 }
 
 function applyFilters() {
