@@ -40,12 +40,18 @@ function loadReportAgendas() {
     return;
   }
 
-  // 상임위별 그룹핑
+  // 상임위별 그룹핑 + 그룹 내 정렬 (게임+★ > 게임 > 일반)
   const byCommittee = {};
   agendas.forEach(a => {
     if (!byCommittee[a.committee]) byCommittee[a.committee] = [];
     byCommittee[a.committee].push(a);
   });
+  for (const items of Object.values(byCommittee)) {
+    items.sort((a, b) => {
+      const score = x => (x.category === 'game' ? 2 : 0) + (x.is_company_mentioned === 'TRUE' ? 1 : 0);
+      return score(b) - score(a);
+    });
+  }
 
   let html = '';
   for (const [comm, items] of Object.entries(byCommittee)) {
