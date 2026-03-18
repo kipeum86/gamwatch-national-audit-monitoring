@@ -18,6 +18,9 @@
     </div>
   </div>
 
+  <!-- 본문 (인증 전 숨김) -->
+  <div id="app-content" style="display:none;">
+
   <!-- 헤더 -->
   <header class="header">
     <div class="header-left">
@@ -217,6 +220,8 @@
   <!-- 알림 -->
   <div id="notification" class="notification" style="display:none;"></div>
 
+  </div><!-- /app-content -->
+
   <script>
     const AUTH_HASH = '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8'; // sha256('260320') - NOT actual check, see below
     function checkAuth() {
@@ -224,13 +229,15 @@
       if (pw === '260320') {
         localStorage.setItem('gamwatch_auth', 'ok');
         document.getElementById('auth-gate').style.display = 'none';
+        document.getElementById('app-content').style.display = '';
       } else {
         document.getElementById('auth-error').style.display = 'block';
       }
     }
-    // 이미 인증된 경우 게이트 숨김
+    // 이미 인증된 경우 게이트 숨김 + 본문 표시
     if (localStorage.getItem('gamwatch_auth') === 'ok') {
       document.getElementById('auth-gate').style.display = 'none';
+      document.getElementById('app-content').style.display = '';
     }
   </script>
   <script src="config.js"></script>
