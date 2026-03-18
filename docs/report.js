@@ -7,6 +7,26 @@ function openReportModal() {
   document.getElementById('report-preview').style.display = 'none';
   document.getElementById('report-agenda-list').innerHTML = '';
   document.getElementById('report-agenda-actions').style.display = 'none';
+
+  // 날짜 옵션 채우기
+  const reportDate = document.getElementById('report-date');
+  const currentVal = reportDate.value;
+  // 기존 옵션 초기화 (첫 번째 빈 옵션 유지 안 함)
+  reportDate.innerHTML = '';
+  const dates = [...new Set(dataModel.map(a => a.date))].sort().reverse();
+  dates.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d;
+    opt.textContent = d;
+    reportDate.appendChild(opt);
+  });
+  // 이전 선택값 복원 또는 최신 날짜 선택
+  if (currentVal && dates.includes(currentVal)) {
+    reportDate.value = currentVal;
+  } else if (dates.length > 0) {
+    reportDate.value = dates[0];
+  }
+
   loadReportAgendas();
 }
 
@@ -151,13 +171,17 @@ function formatReport(date, agendas) {
     items.forEach((agenda, idx) => {
       report += `${idx + 1}. ${agenda.title}\n`;
 
-      // 발언자
-      agenda.statements.forEach(s => {
-        const party = s.speaker_party ? `(${s.speaker_party})` : '';
-        // 질의자: (당)이름 의원, 답변자: 이름 (직함 포함된 경우 그대로)
-        const suffix = s.speaker_role === 'questioner' ? ' 의원' : '';
-        report += ` - ${party}${s.speaker_name}${suffix}: ${s.content}\n`;
-      });
+      if (agenda.statements && agenda.statements.length > 0) {
+        // 발언자
+        agenda.statements.forEach(s => {
+          const party = s.speaker_party ? `(${s.speaker_party})` : '';
+          const suffix = s.speaker_role === 'questioner' ? ' 의원' : '';
+          report += ` - ${party}${s.speaker_name}${suffix}: ${s.content}\n`;
+        });
+      } else if (agenda.summary) {
+        // statements가 없으면 summary 표시
+        report += ` - ${agenda.summary}\n`;
+      }
 
       // 게임사 언급 상세
       if (agenda.isCompanyMentioned && agenda.company_mention_detail) {
