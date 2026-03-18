@@ -609,6 +609,123 @@ mark {
   margin-left: 8px;
 }
 
+/* ── 보고서 모달 큰 크기 ── */
+.modal-large {
+  max-width: 700px;
+}
+
+/* ── 보고서 안건 선택 ── */
+.report-agenda-list {
+  margin: 16px 0;
+  max-height: 320px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.report-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.report-comm-group {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.report-comm-group:last-child {
+  border-bottom: none;
+}
+
+.report-comm-header {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 14px;
+  background: #f8fafc;
+  color: var(--color-text-secondary);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.report-agenda-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.15s;
+}
+
+.report-agenda-item:hover {
+  background: #f8fafc;
+}
+
+.report-agenda-item:last-child {
+  border-bottom: none;
+}
+
+.report-agenda-item input[type="checkbox"] {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.report-agenda-title {
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.report-agenda-summary {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-left: auto;
+  flex-shrink: 0;
+  max-width: 200px;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.report-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.report-badge.game {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.report-badge.company {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.report-agenda-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.report-preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
 /* ── 수동 분석 모달 폼 ── */
 .modal-small {
   max-width: 500px;

@@ -116,36 +116,41 @@
 
   <!-- 보고서 모달 -->
   <div id="report-modal" class="modal" style="display:none;">
-    <div class="modal-content">
+    <div class="modal-content modal-large">
       <div class="modal-header">
         <h2>Slack 보고서 생성</h2>
         <button class="modal-close" onclick="closeReportModal()">&times;</button>
       </div>
       <div class="modal-body">
+        <!-- 1단계: 필터 -->
         <div class="report-options">
           <div class="filter-group">
             <label for="report-date">날짜</label>
-            <select id="report-date"></select>
-          </div>
-          <div class="filter-group">
-            <label for="report-committee">상임위</label>
-            <select id="report-committee" multiple>
-              <option value="" selected>전체</option>
-            </select>
+            <select id="report-date" onchange="loadReportAgendas()"></select>
           </div>
           <div class="filter-group">
             <label for="report-category">분류</label>
-            <select id="report-category">
-              <option value="game">게임 관련만</option>
+            <select id="report-category" onchange="loadReportAgendas()">
               <option value="all">전체 안건</option>
+              <option value="game">게임 관련만</option>
             </select>
           </div>
-          <button class="btn btn-primary" onclick="generateReport()">보고서 생성</button>
         </div>
+
+        <!-- 2단계: 안건 선택 -->
+        <div id="report-agenda-list" class="report-agenda-list"></div>
+        <div class="report-agenda-actions" id="report-agenda-actions" style="display:none;">
+          <button class="btn btn-sm btn-secondary" onclick="toggleReportCheckAll()">전체 선택/해제</button>
+          <button class="btn btn-primary" onclick="generateReport()">선택한 안건으로 보고서 생성</button>
+        </div>
+
+        <!-- 3단계: 미리보기 -->
         <div id="report-preview" class="report-preview" style="display:none;">
           <pre id="report-text"></pre>
-          <button class="btn btn-primary" onclick="copyReport()">클립보드 복사</button>
-          <span id="copy-feedback" class="copy-feedback"></span>
+          <div class="report-preview-actions">
+            <button class="btn btn-primary" onclick="copyReport()">클립보드 복사</button>
+            <span id="copy-feedback" class="copy-feedback"></span>
+          </div>
         </div>
       </div>
     </div>
