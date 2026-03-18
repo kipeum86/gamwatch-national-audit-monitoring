@@ -1,9 +1,6 @@
 name: GamWatch Pipeline
 
 on:
-  push:
-    paths:
-      - '.github/workflows/pipeline.yml'
   schedule:
     - cron: '0 17 * * *'
   workflow_dispatch:
