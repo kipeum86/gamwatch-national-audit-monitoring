@@ -1072,26 +1072,132 @@ mark {
 
 /* ── 반응형 ── */
 @media (max-width: 768px) {
+  /* 헤더: 컴팩트 레이아웃 */
   .header {
-    flex-direction: column;
-    gap: 12px;
-    align-items: flex-start;
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
+  .header-left {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .header-title {
+    font-size: 20px;
+  }
+
+  .header-subtitle {
+    font-size: 11px;
+  }
+
+  .header-right {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .header-right .btn {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+
+  .header-right .btn-icon {
+    padding: 4px 8px;
+    font-size: 16px;
+  }
+
+  /* 필터바: 2열 그리드로 정리 */
   .filter-bar {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 10px 16px;
+  }
+
+  .filter-group select,
+  .filter-group input {
+    font-size: 13px;
+    padding: 6px 8px;
+  }
+
+  .filter-group label {
+    font-size: 11px;
   }
 
   .filter-search {
+    grid-column: 1 / -1;
     min-width: auto;
   }
 
-  .main-content {
-    padding: 16px;
+  .filter-group-toggle {
+    align-self: end;
   }
 
+  /* 통계바 */
+  .stats-bar {
+    font-size: 12px;
+    padding: 6px 16px;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  /* 메인 콘텐츠 */
+  .main-content {
+    padding: 12px;
+  }
+
+  /* 카드 */
   .agenda-card {
     padding: 12px;
+  }
+
+  .agenda-title {
+    font-size: 14px;
+  }
+
+  .agenda-summary {
+    font-size: 13px;
+  }
+
+  .agenda-meta {
+    font-size: 11px;
+  }
+
+  .agenda-header {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  /* 날짜 그룹 헤더 */
+  .date-group-header {
+    font-size: 15px;
+    padding: 6px 4px;
+  }
+
+  .date-group-count {
+    font-size: 12px;
+  }
+
+  /* 발언 상세 */
+  .statement-content {
+    padding-left: 8px;
+    font-size: 13px;
+  }
+
+  .statement-speaker {
+    font-size: 13px;
+  }
+
+  /* 모달 */
+  .modal-content {
+    width: 95%;
+    margin: 8px;
+    max-height: 95vh;
+  }
+
+  .modal-body {
+    padding: 16px;
   }
 
   .report-options {
@@ -1099,17 +1205,27 @@ mark {
     align-items: stretch;
   }
 
-  .modal-content {
-    width: 95%;
-    margin: 16px;
+  /* 보고서 안건 목록 */
+  .report-agenda-item {
+    padding: 8px 10px;
   }
 
-  .stats-bar {
-    font-size: 13px;
-    padding: 8px 16px;
-    flex-wrap: wrap;
+  .report-agenda-summary {
+    display: none;
   }
 
+  .report-agenda-actions {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  /* 보고서 미리보기 */
+  .report-preview pre {
+    font-size: 11px;
+    padding: 12px;
+  }
+
+  /* 맨 위로 버튼 */
   .btn-scroll-top {
     width: 40px;
     height: 40px;
