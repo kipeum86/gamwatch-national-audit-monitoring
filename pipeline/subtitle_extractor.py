@@ -42,30 +42,35 @@ def _try_transcript_api(video_id: str) -> tuple[str | None, str]:
 
         ytt_api = YouTubeTranscriptApi()
 
-        # 속기사 자막 우선 시도
+        # 어떤 자막이 있는지 먼저 확인
+        try:
+            transcript_list = ytt_api.list(video_id)
+            available = []
+            for t in transcript_list:
+                available.append(f"{t.language_code}(generated={t.is_generated})")
+            logger.info("transcript-api: 사용 가능한 자막: %s", ", ".join(available) if available else "없음")
+        except Exception as e:
+            logger.warning("transcript-api list 실패: %s: %s", type(e).__name__, e)
+
+        # 한국어 자막 fetch
         try:
             transcript = ytt_api.fetch(video_id, languages=["ko"])
             text = _transcript_to_text(transcript)
             if text:
-                logger.info("transcript-api: 속기사 자막 추출 성공 (%d자)", len(text))
-                return text, "stenographer"
-        except Exception:
-            pass
-
-        # 자동생성 자막 시도
-        try:
-            transcript_list = ytt_api.list(video_id)
-            # 자동생성 한국어 자막 찾기
-            for t in transcript_list:
-                if t.language_code == "ko" and t.is_generated:
-                    transcript = ytt_api.fetch(video_id, languages=["ko"])
-                    text = _transcript_to_text(transcript)
-                    if text:
-                        logger.info("transcript-api: 자동생성 자막 추출 성공 (%d자)", len(text))
-                        return text, "auto_generated"
-                    break
-        except Exception:
-            pass
+                # 자동생성 여부 판별
+                is_generated = False
+                try:
+                    for t in ytt_api.list(video_id):
+                        if t.language_code == "ko":
+                            is_generated = t.is_generated
+                            break
+                except Exception:
+                    pass
+                source = "auto_generated" if is_generated else "stenographer"
+                logger.info("transcript-api: 자막 추출 성공 (%s, %d자)", source, len(text))
+                return text, source
+        except Exception as e:
+            logger.warning("transcript-api fetch 실패: %s: %s", type(e).__name__, e)
 
         return None, "none"
 
@@ -73,7 +78,7 @@ def _try_transcript_api(video_id: str) -> tuple[str | None, str]:
         logger.warning("youtube-transcript-api 미설치")
         return None, "none"
     except Exception as e:
-        logger.warning("transcript-api 실패: %s", e)
+        logger.warning("transcript-api 예외: %s: %s", type(e).__name__, e)
         return None, "none"
 
 
@@ -81,8 +86,14 @@ def _transcript_to_text(transcript) -> str | None:
     """Transcript 객체를 텍스트로 변환한다."""
     lines = []
     prev_text = ""
-    for snippet in transcript:
-        text = snippet.text.strip()
+    # transcript는 FetchedTranscript 객체, .snippets로 접근
+    snippets = getattr(transcript, 'snippets', None) or transcript
+    for snippet in snippets:
+        text = getattr(snippet, 'text', None)
+        if text is None:
+            # dict 형태인 경우
+            text = snippet.get('text', '') if isinstance(snippet, dict) else str(snippet)
+        text = text.strip()
         if not text:
             continue
         # 중복 라인 제거
