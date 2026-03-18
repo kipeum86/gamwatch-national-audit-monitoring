@@ -133,6 +133,13 @@
               <option value="" selected>전체</option>
             </select>
           </div>
+          <div class="filter-group">
+            <label for="report-category">분류</label>
+            <select id="report-category">
+              <option value="game">게임 관련만</option>
+              <option value="all">전체 안건</option>
+            </select>
+          </div>
           <button class="btn btn-primary" onclick="generateReport()">보고서 생성</button>
         </div>
         <div id="report-preview" class="report-preview" style="display:none;">

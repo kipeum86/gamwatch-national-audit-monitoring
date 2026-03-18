@@ -23,25 +23,33 @@ function generateReport() {
     return;
   }
 
-  // 해당 날짜의 game 안건 필터
-  let agendas = dataModel.filter(a => a.date === date && a.category === 'game');
+  const categoryFilter = document.getElementById('report-category').value;
+
+  // 해당 날짜 안건 필터
+  let agendas = dataModel.filter(a => a.date === date);
+  if (categoryFilter === 'game') {
+    agendas = agendas.filter(a => a.category === 'game');
+  }
   if (selectedComms.length > 0) {
     agendas = agendas.filter(a => selectedComms.includes(a.committee));
   }
 
   if (agendas.length === 0) {
-    showNotification('해당 날짜의 게임 관련 데이터가 없습니다.', 'error');
+    const msg = categoryFilter === 'game'
+      ? '해당 날짜의 게임 관련 데이터가 없습니다. "전체 안건"으로 시도해 보세요.'
+      : '해당 날짜의 데이터가 없습니다.';
+    showNotification(msg, 'error');
     return;
   }
 
-  const text = formatReport(date, agendas);
+  const text = formatReport(date, agendas, categoryFilter);
   const previewEl = document.getElementById('report-preview');
   document.getElementById('report-text').textContent = text;
   previewEl.style.display = 'block';
   document.getElementById('copy-feedback').textContent = '';
 }
 
-function formatReport(date, agendas) {
+function formatReport(date, agendas, categoryFilter) {
   const formattedDate = formatDateKorean(date);
 
   // 상임위별 그룹핑
@@ -54,7 +62,8 @@ function formatReport(date, agendas) {
   let report = '';
 
   // ── 인사말 + 요약 ──
-  report += `안녕하세요. ${formattedDate} 진행된 주요 상임위 국정감사 내용(게임 및 IT 관련) 정리하여 안내드립니다.\n`;
+  const scopeLabel = categoryFilter === 'game' ? '게임 및 IT 관련' : '주요 안건';
+  report += `안녕하세요. ${formattedDate} 진행된 주요 상임위 국정감사 내용(${scopeLabel}) 정리하여 안내드립니다.\n`;
 
   for (const [comm, items] of Object.entries(byCommittee)) {
     const titles = items.map(a => a.title).join(', ');

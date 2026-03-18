@@ -119,7 +119,7 @@ class SheetsClient:
         ).execute()
 
     def ensure_headers(self) -> None:
-        """모든 탭에 헤더가 없으면 추가한다."""
+        """모든 탭에 헤더가 없으면 추가하고, 헤더 행을 보호한다."""
         for tab_name, headers in HEADERS.items():
             try:
                 result = (
@@ -139,6 +139,60 @@ class SheetsClient:
                     logger.info("%s 헤더 생성 완료", tab_name)
             except Exception as e:
                 logger.warning("%s 탭 접근 실패 (탭이 존재하는지 확인): %s", tab_name, e)
+
+        self._protect_headers()
+
+    def _protect_headers(self) -> None:
+        """각 탭의 헤더 행(1행)을 편집 보호한다. 서비스 계정만 편집 가능."""
+        try:
+            meta = self.service.spreadsheets().get(
+                spreadsheetId=self.spreadsheet_id,
+            ).execute()
+        except Exception as e:
+            logger.warning("시트 메타 조회 실패: %s", e)
+            return
+
+        sheets = {s["properties"]["title"]: s for s in meta.get("sheets", [])}
+
+        # 기존 보호 범위 확인
+        existing_protections = set()
+        for sheet in meta.get("sheets", []):
+            for pr in sheet.get("protectedRanges", []):
+                desc = pr.get("description", "")
+                if desc.startswith("gamwatch-header-"):
+                    existing_protections.add(desc)
+
+        requests = []
+        for tab_name in HEADERS:
+            sheet_info = sheets.get(tab_name)
+            if not sheet_info:
+                continue
+
+            protection_id = f"gamwatch-header-{tab_name}"
+            if protection_id in existing_protections:
+                continue
+
+            sheet_id = sheet_info["properties"]["sheetId"]
+            requests.append({
+                "addProtectedRange": {
+                    "protectedRange": {
+                        "range": {
+                            "sheetId": sheet_id,
+                            "startRowIndex": 0,
+                            "endRowIndex": 1,
+                        },
+                        "description": protection_id,
+                        "warningOnly": False,
+                    }
+                }
+            })
+
+        if requests:
+            self.service.spreadsheets().batchUpdate(
+                spreadsheetId=self.spreadsheet_id,
+                body={"requests": requests},
+            ).execute()
+            logger.info("헤더 보호 설정 완료 (%d개 탭)", len(requests))
 
     # ──────────────────────────────────────────
     # 도메인별 메서드
