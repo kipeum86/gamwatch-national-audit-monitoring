@@ -14,6 +14,7 @@
       <p class="header-subtitle">국정감사 게임산업 모니터링</p>
     </div>
     <div class="header-right">
+      <button id="btn-refresh" class="btn btn-icon" onclick="refreshData()" title="새로고침">&#8635;</button>
       <button class="btn btn-icon" onclick="openSettingsModal()" title="설정">&#9881;</button>
       <button class="btn btn-secondary" onclick="openManualModal()">영상 분석 요청</button>
       <button id="btn-trigger" class="btn btn-primary" onclick="triggerPipeline()">
@@ -44,6 +45,9 @@
         <option value="general">일반</option>
       </select>
     </div>
+    <div class="filter-group filter-group-toggle">
+      <button id="btn-game-toggle" class="btn btn-chip" onclick="toggleGameFilter()">게임 관련만</button>
+    </div>
     <div class="filter-group filter-search">
       <label for="filter-search">검색</label>
       <input type="text" id="filter-search" placeholder="키워드 검색..." oninput="applyFilters()">
@@ -51,6 +55,18 @@
     <div class="filter-group">
       <button class="btn btn-secondary" onclick="openReportModal()">보고서 생성</button>
     </div>
+    <div class="filter-group">
+      <button class="btn btn-secondary btn-sm" onclick="resetFilters()">초기화</button>
+    </div>
+  </div>
+
+  <!-- 통계 요약 바 -->
+  <div id="stats-bar" class="stats-bar" style="display:none;">
+    <span id="stats-total">전체 0건</span>
+    <span class="stats-divider">|</span>
+    <span id="stats-game">게임 관련 0건</span>
+    <span class="stats-divider">|</span>
+    <span id="stats-company">자사 언급 0건</span>
   </div>
 
   <!-- 파이프라인 상태 바 -->
@@ -72,6 +88,9 @@
     <div id="empty-state" class="empty-state" style="display:none;">
       <p>데이터가 없습니다.</p>
       <p>파이프라인을 실행하거나 잠시 후 다시 확인해 주세요.</p>
+    </div>
+    <div id="agenda-toolbar" class="agenda-toolbar" style="display:none;">
+      <button id="btn-toggle-all" class="btn btn-sm btn-secondary" onclick="toggleAllDetails()">모두 펼치기</button>
     </div>
     <div id="agenda-list" class="agenda-list"></div>
   </main>
@@ -165,6 +184,9 @@
       </div>
     </div>
   </div>
+
+  <!-- 맨 위로 버튼 -->
+  <button id="btn-scroll-top" class="btn-scroll-top" onclick="scrollToTop()" title="맨 위로">&#9650;</button>
 
   <!-- 알림 -->
   <div id="notification" class="notification" style="display:none;"></div>

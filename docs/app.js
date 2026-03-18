@@ -7,6 +7,7 @@ let allAgendas = [];
 let allStatements = [];
 let allNewsArticles = [];
 let dataModel = []; // 안건 기준 join된 최종 모델
+let allExpanded = false;
 
 // ──────────────────────────────────────────────
 // 초기화
@@ -158,6 +159,11 @@ function applyFilters() {
     });
   }
 
+  // 게임 토글 버튼 동기화
+  const gameToggle = document.getElementById('btn-game-toggle');
+  if (gameToggle) gameToggle.classList.toggle('active', category === 'game');
+
+  updateStats(filtered);
   renderAgendas(filtered, search);
 }
 
@@ -187,17 +193,29 @@ function renderAgendas(agendas, searchTerm) {
 
   const sortedKeys = Object.keys(groups).sort().reverse();
 
-  container.innerHTML = sortedKeys.map(key => {
+  container.innerHTML = sortedKeys.map((key, index) => {
     const g = groups[key];
+    const isFirst = index === 0;
+    const collapsedClass = isFirst ? '' : 'collapsed';
+    const chevron = isFirst ? '&#9660;' : '&#9654;';
     return `
-      <div class="date-group">
-        <div class="date-group-header">
+      <div class="date-group ${collapsedClass}">
+        <div class="date-group-header" onclick="toggleDateGroup(this)">
+          <span class="date-group-chevron">${chevron}</span>
           ${g.date} <span class="committee-label">${g.committee}</span>
+          <span class="date-group-count">(${g.agendas.length}건)</span>
         </div>
-        ${g.agendas.map(a => renderAgendaCard(a, searchTerm)).join('')}
+        <div class="date-group-body">
+          ${g.agendas.map(a => renderAgendaCard(a, searchTerm)).join('')}
+        </div>
       </div>
     `;
   }).join('');
+
+  // 툴바 표시 + 상태 리셋
+  document.getElementById('agenda-toolbar').style.display = agendas.length ? 'flex' : 'none';
+  allExpanded = false;
+  document.getElementById('btn-toggle-all').textContent = '모두 펼치기';
 }
 
 function renderAgendaCard(agenda, searchTerm) {
@@ -284,6 +302,100 @@ function escapeHtml(str) {
 
 function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function toggleDateGroup(headerEl) {
+  const group = headerEl.closest('.date-group');
+  group.classList.toggle('collapsed');
+  const chevron = headerEl.querySelector('.date-group-chevron');
+  chevron.innerHTML = group.classList.contains('collapsed') ? '&#9654;' : '&#9660;';
+}
+
+function toggleAllDetails() {
+  allExpanded = !allExpanded;
+  document.querySelectorAll('.agenda-detail').forEach(d => {
+    d.classList.toggle('open', allExpanded);
+  });
+  document.querySelectorAll('.date-group').forEach(g => {
+    g.classList.toggle('collapsed', !allExpanded);
+    const chevron = g.querySelector('.date-group-chevron');
+    if (chevron) chevron.innerHTML = allExpanded ? '&#9660;' : '&#9654;';
+  });
+  document.getElementById('btn-toggle-all').textContent = allExpanded ? '모두 접기' : '모두 펼치기';
+}
+
+function updateStats(filtered) {
+  const bar = document.getElementById('stats-bar');
+  bar.style.display = filtered.length ? 'flex' : 'none';
+  document.getElementById('stats-total').textContent = `전체 ${filtered.length}건`;
+  const gameCount = filtered.filter(a => a.category === 'game').length;
+  document.getElementById('stats-game').textContent = `게임 관련 ${gameCount}건`;
+  const companyCount = filtered.filter(a => a.isCompanyMentioned).length;
+  document.getElementById('stats-company').textContent = `자사 언급 ${companyCount}건`;
+}
+
+async function refreshData() {
+  const btn = document.getElementById('btn-refresh');
+  btn.disabled = true;
+  showNotification('새로고침 중...', 'info');
+  try {
+    await loadAllData();
+    buildDataModel();
+    resetFilterOptions();
+    populateFilters();
+    applyFilters();
+    document.getElementById('last-updated').textContent =
+      `마지막 로드: ${new Date().toLocaleString('ko-KR')}`;
+    showNotification('새로고침 완료', 'success');
+  } catch (e) {
+    showNotification('새로고침 실패', 'error');
+    console.error('Refresh error:', e);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function resetFilterOptions() {
+  ['filter-date', 'filter-committee', 'report-date'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    while (sel.options.length > 1) sel.remove(1);
+  });
+  const reportComm = document.getElementById('report-committee');
+  if (reportComm) {
+    while (reportComm.options.length > 1) reportComm.remove(1);
+  }
+}
+
+function toggleGameFilter() {
+  const select = document.getElementById('filter-category');
+  select.value = select.value === 'game' ? '' : 'game';
+  applyFilters();
+}
+
+function resetFilters() {
+  document.getElementById('filter-date').value = '';
+  document.getElementById('filter-committee').value = '';
+  document.getElementById('filter-category').value = '';
+  document.getElementById('filter-search').value = '';
+  const gameToggle = document.getElementById('btn-game-toggle');
+  if (gameToggle) gameToggle.classList.remove('active');
+  applyFilters();
+}
+
+// ── 맨 위로 버튼 ──
+
+window.addEventListener('scroll', function() {
+  const btn = document.getElementById('btn-scroll-top');
+  if (window.scrollY > 300) {
+    btn.classList.add('visible');
+  } else {
+    btn.classList.remove('visible');
+  }
+});
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function showNotification(message, type) {

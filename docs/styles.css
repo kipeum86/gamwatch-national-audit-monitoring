@@ -171,6 +171,54 @@ body {
   background: #cbd5e1;
 }
 
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+.btn-chip {
+  border-radius: 20px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  font-size: 13px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-chip.active {
+  background: var(--color-game);
+  color: white;
+  border-color: var(--color-game);
+}
+
+.filter-group-toggle {
+  align-self: flex-end;
+}
+
+/* ── 통계 요약 바 ── */
+.stats-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 24px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.stats-divider {
+  color: var(--color-border);
+}
+
+/* ── 안건 툴바 ── */
+.agenda-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
 /* ── 필터바 ── */
 .filter-bar {
   display: flex;
@@ -247,10 +295,42 @@ body {
 .date-group-header {
   font-size: 18px;
   font-weight: 700;
-  padding: 8px 0;
+  padding: 8px 4px;
   margin-bottom: 12px;
   border-bottom: 2px solid var(--color-border);
   color: var(--color-text);
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 4px;
+}
+
+.date-group-header:hover {
+  background: var(--color-bg);
+}
+
+.date-group-chevron {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  width: 16px;
+  flex-shrink: 0;
+}
+
+.date-group-count {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-weight: 400;
+  margin-left: auto;
+}
+
+.date-group.collapsed .date-group-body {
+  display: none;
+}
+
+.date-group.collapsed .date-group-header {
+  margin-bottom: 0;
 }
 
 .committee-label {
@@ -605,10 +685,39 @@ mark {
   gap: 8px;
 }
 
+/* ── 맨 위로 버튼 ── */
+.btn-scroll-top {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+  z-index: 150;
+}
+
+.btn-scroll-top.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.btn-scroll-top:hover {
+  background: var(--color-primary-hover);
+}
+
 /* ── 알림 ── */
 .notification {
   position: fixed;
-  bottom: 24px;
+  bottom: 80px;
   right: 24px;
   padding: 12px 20px;
   border-radius: var(--radius);
@@ -665,5 +774,18 @@ mark {
   .modal-content {
     width: 95%;
     margin: 16px;
+  }
+
+  .stats-bar {
+    font-size: 13px;
+    padding: 8px 16px;
+    flex-wrap: wrap;
+  }
+
+  .btn-scroll-top {
+    width: 40px;
+    height: 40px;
+    bottom: 16px;
+    right: 16px;
   }
 }
