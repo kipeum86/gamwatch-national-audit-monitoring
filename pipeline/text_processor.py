@@ -132,15 +132,31 @@ def _run_pass2(
         logger.info("Pass 2: 재분류 없음")
         return agendas
 
+    # 유효한 재분류 항목만 필터
+    valid_reclass = []
+    for r in reclassified:
+        if not isinstance(r, dict):
+            continue
+        if "original_title" not in r or "updated_agenda" not in r:
+            logger.warning("Pass 2: 불완전한 재분류 항목 스킵: %s", str(r)[:100])
+            continue
+        valid_reclass.append(r)
+
+    if not valid_reclass:
+        logger.info("Pass 2: 유효한 재분류 없음")
+        return agendas
+
     # 재분류된 안건 병합
-    reclass_titles = {r["original_title"] for r in reclassified}
+    reclass_titles = {r["original_title"] for r in valid_reclass}
     updated = []
     for agenda in agendas:
         if agenda.get("title") in reclass_titles:
-            # 재분류된 안건으로 교체
-            match = next(r for r in reclassified if r["original_title"] == agenda["title"])
-            updated.append(match["updated_agenda"])
-            logger.info("재분류: %s → game", agenda["title"])
+            match = next((r for r in valid_reclass if r["original_title"] == agenda["title"]), None)
+            if match:
+                updated.append(match["updated_agenda"])
+                logger.info("재분류: %s → game", agenda["title"])
+            else:
+                updated.append(agenda)
         else:
             updated.append(agenda)
 
