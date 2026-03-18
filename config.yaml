@@ -8,7 +8,7 @@ llm:
 
 # Google Sheets
 sheets:
-  spreadsheet_id: ""          # Google Spreadsheet ID (from URL)
+  spreadsheet_id: "1IG3GWc4kChVmjYxsPw_NX3gUlKj_ehOFgOMh3RqJPRY"
 
 # YouTube Channels - 국회방송
 youtube:

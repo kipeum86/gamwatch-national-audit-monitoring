@@ -4,14 +4,14 @@
  */
 const CONFIG = {
   // Google Sheets
-  SPREADSHEET_ID: '',           // Google Spreadsheet ID (URL에서 추출)
-  SHEETS_API_KEY: '',           // GCP Console에서 발급한 API 키 (Sheets 읽기 전용)
+  SPREADSHEET_ID: '1IG3GWc4kChVmjYxsPw_NX3gUlKj_ehOFgOMh3RqJPRY',
+  SHEETS_API_KEY: 'AIzaSyANCUUWh4ckh52L37haIOPLjC007yihCyw',
 
   // GitHub Actions 트리거
-  GH_OWNER: '',                 // GitHub 사용자/조직명
+  GH_OWNER: 'kipeum86',
   GH_REPO: 'gamwatch-national-audit-monitoring',
   GH_WORKFLOW_ID: 'pipeline.yml',
-  GH_PAT: '',                   // GitHub PAT (workflow scope만)
+  GH_PAT: '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',
 
   // Sheets 탭 이름
   TABS: {
