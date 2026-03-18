@@ -14,6 +14,7 @@
       <p class="header-subtitle">국정감사 게임산업 모니터링</p>
     </div>
     <div class="header-right">
+      <button class="btn btn-icon" onclick="openSettingsModal()" title="설정">&#9881;</button>
       <button class="btn btn-secondary" onclick="openManualModal()">영상 분석 요청</button>
       <button id="btn-trigger" class="btn btn-primary" onclick="triggerPipeline()">
         전체 파이프라인 실행
@@ -130,6 +131,24 @@
           </div>
         </div>
         <button class="btn btn-primary btn-full" onclick="submitManualVideo()">분석 요청</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 설정 모달 -->
+  <div id="settings-modal" class="modal" style="display:none;">
+    <div class="modal-content modal-small">
+      <div class="modal-header">
+        <h2>설정</h2>
+        <button class="modal-close" onclick="closeSettingsModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-description">파이프라인 실행에 필요한 GitHub Personal Access Token을 입력하세요. 브라우저에 저장되며 외부로 전송되지 않습니다.</p>
+        <div class="form-group">
+          <label for="settings-pat">GitHub PAT (workflow scope)</label>
+          <input type="password" id="settings-pat" placeholder="ghp_...">
+        </div>
+        <button class="btn btn-primary btn-full" onclick="saveSettings()">저장</button>
       </div>
     </div>
   </div>

@@ -1,6 +1,7 @@
 /**
  * GamWatch 대시보드 설정.
- * GitHub Pages 배포 전에 아래 값들을 실제 값으로 교체하세요.
+ * GH_PAT은 보안상 코드에 포함하지 않고, 브라우저 localStorage에서 관리합니다.
+ * 첫 접속 시 설정 모달에서 입력하면 됩니다.
  */
 const CONFIG = {
   // Google Sheets
@@ -11,7 +12,14 @@ const CONFIG = {
   GH_OWNER: 'kipeum86',
   GH_REPO: 'gamwatch-national-audit-monitoring',
   GH_WORKFLOW_ID: 'pipeline.yml',
-  GH_PAT: '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',
+
+  // GH_PAT은 localStorage에서 로드
+  get GH_PAT() {
+    return localStorage.getItem('gamwatch_gh_pat') || '';
+  },
+  set GH_PAT(val) {
+    localStorage.setItem('gamwatch_gh_pat', val);
+  },
 
   // Sheets 탭 이름
   TABS: {

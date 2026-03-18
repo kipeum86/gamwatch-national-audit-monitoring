@@ -93,11 +93,36 @@ async function submitManualVideo() {
 // ──────────────────────────────────────────────
 
 function _checkGitHubConfig() {
-  if (!CONFIG.GH_PAT || !CONFIG.GH_OWNER) {
-    showNotification('GitHub 설정이 완료되지 않았습니다. config.js를 확인해 주세요.', 'error');
+  if (!CONFIG.GH_PAT) {
+    showNotification('GitHub PAT이 설정되지 않았습니다. ⚙ 설정 버튼에서 입력해 주세요.', 'error');
+    openSettingsModal();
     return false;
   }
   return true;
+}
+
+// ──────────────────────────────────────────────
+// 설정 모달
+// ──────────────────────────────────────────────
+
+function openSettingsModal() {
+  document.getElementById('settings-modal').style.display = 'flex';
+  document.getElementById('settings-pat').value = CONFIG.GH_PAT || '';
+}
+
+function closeSettingsModal() {
+  document.getElementById('settings-modal').style.display = 'none';
+}
+
+function saveSettings() {
+  const pat = document.getElementById('settings-pat').value.trim();
+  if (!pat) {
+    showNotification('PAT을 입력해 주세요.', 'error');
+    return;
+  }
+  CONFIG.GH_PAT = pat;
+  closeSettingsModal();
+  showNotification('설정이 저장되었습니다.', 'success');
 }
 
 async function _dispatchWorkflow(inputs) {
