@@ -56,6 +56,11 @@ company_names:
   - "라이엇게임즈"
   - "블리자드"
 
+# 국정감사 기간 (이 기간에만 자동 실행, 수동 실행은 항상 가능)
+audit_period:
+  start: "2025-10-01"
+  end: "2025-10-31"
+
 # Pipeline Settings
 pipeline:
   retry_count: 3

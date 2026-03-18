@@ -32,6 +32,18 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def _is_in_audit_period(config: dict) -> bool:
+    """현재 날짜가 국정감사 기간 내인지 확인한다."""
+    from datetime import date
+    period = config.get("audit_period", {})
+    start = period.get("start", "")
+    end = period.get("end", "")
+    if not start or not end:
+        return True  # 기간 미설정이면 항상 실행
+    today = date.today().isoformat()
+    return start <= today <= end
+
+
 def run_pipeline():
     """전체 파이프라인을 실행한다."""
     logger.info("=== GamWatch 파이프라인 시작 ===")
@@ -69,8 +81,17 @@ def run_pipeline():
     logger.info("키워드: include=%d개, exclude=%d개", len(include_kw), len(exclude_kw))
 
     # ── 1. 영상 감지 ──
-    # 수동 입력 영상이 있으면 해당 영상만 처리
     manual_url = os.environ.get("MANUAL_VIDEO_URL", "").strip()
+
+    # 자동 실행(cron)일 때 국정감사 기간 체크
+    if not manual_url and not _is_in_audit_period(config):
+        logger.info("국정감사 기간 외 — 자동 실행 스킵 (기간: %s ~ %s)",
+                     config.get("audit_period", {}).get("start", "미설정"),
+                     config.get("audit_period", {}).get("end", "미설정"))
+        logger.info("=== GamWatch 파이프라인 종료 ===")
+        return
+
+    # 수동 입력 영상이 있으면 해당 영상만 처리
     if manual_url:
         video_id = _extract_video_id(manual_url)
         if not video_id:
