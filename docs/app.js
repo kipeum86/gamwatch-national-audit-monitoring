@@ -235,6 +235,7 @@ function renderAgendaCard(agenda, searchTerm) {
     <div class="${classes}" onclick="toggleDetail(this)">
       <div class="agenda-header">
         <span class="agenda-badge ${agenda.category}">${isGame ? '게임' : '일반'}</span>
+        ${agenda.event_type && agenda.event_type !== '국정감사' ? `<span class="agenda-badge event-type">${agenda.event_type}</span>` : ''}
         <span class="agenda-title">${title}</span>
       </div>
       <div class="agenda-summary">${summary}</div>

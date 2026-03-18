@@ -171,22 +171,37 @@
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label for="manual-committee">상임위/기관명</label>
-            <select id="manual-committee">
-              <option value="">선택</option>
-              <option value="정무위원회">정무위원회</option>
-              <option value="과학기술정보방송통신위원회">과방위</option>
-              <option value="문화체육관광위원회">문체위</option>
-              <option value="산업통상자원중소벤처기업위원회">산자위</option>
-              <option value="법제사법위원회">법사위</option>
-              <option value="보건복지위원회">복지위</option>
-              <option value="기타">기타</option>
-            </select>
+            <label for="manual-event-type">이벤트 유형</label>
+            <input type="text" id="manual-event-type" list="event-type-list" placeholder="국정감사" value="국정감사">
+            <datalist id="event-type-list">
+              <option value="국정감사">
+              <option value="업무보고">
+              <option value="간담회">
+              <option value="청문회">
+              <option value="토론회">
+              <option value="세미나">
+            </datalist>
           </div>
           <div class="form-group">
             <label for="manual-date">행사 일자</label>
             <input type="date" id="manual-date">
           </div>
+        </div>
+        <div class="form-group">
+          <label for="manual-committee">상임위/기관명</label>
+          <input type="text" id="manual-committee" list="committee-list" placeholder="예: 문화체육관광위원회, 문체부, 청와대 등">
+          <datalist id="committee-list">
+            <option value="정무위원회">
+            <option value="과학기술정보방송통신위원회">
+            <option value="문화체육관광위원회">
+            <option value="산업통상자원중소벤처기업위원회">
+            <option value="법제사법위원회">
+            <option value="보건복지위원회">
+            <option value="기획재정위원회">
+            <option value="기후에너지환경노동위원회">
+            <option value="문화체육관광부">
+            <option value="과학기술정보통신부">
+          </datalist>
         </div>
 
         <div id="manual-subtitle-status" class="subtitle-status" style="display:none;"></div>

@@ -119,7 +119,10 @@ function formatReport(date, agendas) {
   let report = '';
 
   // ── 1. 인사말 ──
-  report += `안녕하세요. ${dateLabel} 진행된 주요 상임위 국정감사 내용(게임 및 IT 관련) 정리하여 안내드립니다.\n\n`;
+  const eventTypes = [...new Set(agendas.map(a => a.event_type || '국정감사'))];
+  const isAllAudit = eventTypes.length === 1 && eventTypes[0] === '국정감사';
+  const eventLabel = isAllAudit ? '국정감사' : eventTypes.join('·');
+  report += `안녕하세요. ${dateLabel} 진행된 주요 ${eventLabel} 내용(게임 및 IT 관련) 정리하여 안내드립니다.\n\n`;
 
   // ── 2. 상임위별 요약 ──
   for (const [comm, items] of byCommittee) {

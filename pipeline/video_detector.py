@@ -26,6 +26,7 @@ class VideoTask:
     committee_code: str
     date: str  # YYYY-MM-DD
     source: str  # "auto" / "manual"
+    event_type: str = "국정감사"  # 국정감사 / 업무보고 / 간담회 등 자유 입력
 
 
 def detect_videos(

@@ -71,8 +71,9 @@ async function submitManualVideo() {
   if (!_checkGitHubConfig()) return;
 
   const url = document.getElementById('manual-url').value.trim();
-  const committee = document.getElementById('manual-committee').value;
+  const committee = document.getElementById('manual-committee').value.trim();
   const date = document.getElementById('manual-date').value;
+  const eventType = document.getElementById('manual-event-type').value.trim() || '국정감사';
   const subtitleText = document.getElementById('manual-subtitle').value.trim();
 
   if (!url) {
@@ -142,6 +143,7 @@ async function submitManualVideo() {
     committee: committee,
     committee_code: codeMap[committee] || 'etc',
     event_date: date,
+    event_type: eventType,
     subtitle_data: subtitleData,
   };
 

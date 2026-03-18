@@ -100,6 +100,7 @@ def run_pipeline():
         committee = os.environ.get("MANUAL_COMMITTEE", "").strip()
         committee_code = os.environ.get("MANUAL_COMMITTEE_CODE", "etc").strip()
         event_date = os.environ.get("MANUAL_EVENT_DATE", "").strip() or now_kst_str()[:10]
+        event_type = os.environ.get("MANUAL_EVENT_TYPE", "").strip() or "국정감사"
         videos = [VideoTask(
             video_id=video_id,
             url=manual_url,
@@ -108,8 +109,9 @@ def run_pipeline():
             committee_code=_guess_committee_code(committee) if committee else committee_code,
             date=event_date,
             source="manual",
+            event_type=event_type,
         )]
-        logger.info("수동 입력 영상: %s (%s)", video_id, committee or "미지정")
+        logger.info("수동 입력 영상: %s (%s, %s)", video_id, committee or "미지정", event_type)
     else:
         days_back = config.get("pipeline", {}).get("search_days_back", 7)
         videos = detect_videos(sa_file, sheets, days_back=days_back)
@@ -223,6 +225,7 @@ def _write_results(sheets: SheetsClient, video, subtitle_source: str, agendas_ra
             "is_company_mentioned": str(agenda.get("is_company_mentioned", False)).upper(),
             "company_mention_detail": agenda.get("company_mention_detail", ""),
             "sort_order": str(i + 1),
+            "event_type": video.event_type,
         })
 
         for j, stmt in enumerate(agenda.get("statements", [])):

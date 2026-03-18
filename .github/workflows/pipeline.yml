@@ -25,6 +25,10 @@ on:
         description: '브라우저에서 추출한 자막 (gzip+base64)'
         required: false
         default: ''
+      event_type:
+        description: '이벤트 유형 (국정감사/업무보고/간담회/청문회 등)'
+        required: false
+        default: '국정감사'
 
 jobs:
   process:
@@ -66,6 +70,7 @@ jobs:
           MANUAL_COMMITTEE_CODE: ${{ github.event.inputs.committee_code }}
           MANUAL_EVENT_DATE: ${{ github.event.inputs.event_date }}
           SUBTITLE_DATA: ${{ github.event.inputs.subtitle_data }}
+          MANUAL_EVENT_TYPE: ${{ github.event.inputs.event_type }}
           NOTEBOOKLM_AUTH_JSON: ${{ secrets.NOTEBOOKLM_AUTH_JSON }}
         run: python -m pipeline.main
 
