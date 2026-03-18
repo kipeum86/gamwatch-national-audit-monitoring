@@ -72,7 +72,10 @@ def run_pipeline():
     # 수동 입력 영상이 있으면 해당 영상만 처리
     manual_url = os.environ.get("MANUAL_VIDEO_URL", "").strip()
     if manual_url:
-        video_id = _extract_video_id(manual_url) or manual_url
+        video_id = _extract_video_id(manual_url)
+        if not video_id:
+            logger.error("유효하지 않은 URL: %s", manual_url)
+            sys.exit(1)
         committee = os.environ.get("MANUAL_COMMITTEE", "").strip()
         committee_code = os.environ.get("MANUAL_COMMITTEE_CODE", "etc").strip()
         event_date = os.environ.get("MANUAL_EVENT_DATE", "").strip() or now_kst_str()[:10]

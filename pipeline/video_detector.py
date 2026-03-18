@@ -153,7 +153,7 @@ def _get_manual_tasks(sheets_client) -> list[VideoTask]:
 def _extract_video_id(url: str) -> str | None:
     """유튜브 URL에서 video_id를 추출한다."""
     patterns = [
-        r"(?:v=|/v/|youtu\.be/)([a-zA-Z0-9_-]{11})",
+        r"(?:v=|/v/|/live/|youtu\.be/)([a-zA-Z0-9_-]{11})",
         r"^([a-zA-Z0-9_-]{11})$",  # video_id 직접 입력
     ]
     for pattern in patterns:
