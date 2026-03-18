@@ -51,6 +51,10 @@ company_names:
   - "네오위즈"
   - "NHN"
   - "슈퍼셀"
+  - "웹젠"
+  - "시프트업"
+  - "라이엇게임즈"
+  - "블리자드"
 
 # Pipeline Settings
 pipeline:
