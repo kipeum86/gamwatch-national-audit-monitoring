@@ -91,44 +91,48 @@ async function submitManualVideo() {
     return;
   }
 
-  if (!subtitleText) {
-    showNotification('자막 텍스트를 붙여넣어 주세요. 위 안내를 참고하세요.', 'error');
-    // 가이드 열기
-    document.getElementById('transcript-guide').open = true;
+  if (subtitleText && subtitleText.length < 100) {
+    showNotification('자막이 너무 짧습니다. 전체 스크립트를 복사해 주세요.', 'error');
     return;
   }
 
-  if (subtitleText.length < 100) {
-    showNotification('자막이 너무 짧습니다. 전체 스크립트를 복사해 주세요.', 'error');
-    return;
+  // 자막 없이 요청 시 확인
+  if (!subtitleText) {
+    if (!confirm('자막 없이 분석을 요청합니다.\n서버에서 자동 추출을 시도합니다 (NotebookLM → yt-dlp).\n계속하시겠습니까?')) {
+      return;
+    }
   }
 
   const btn = document.getElementById('btn-manual-submit');
   btn.disabled = true;
   btn.textContent = '분석 요청 중...';
-  _setSubtitleStatus(`자막 ${subtitleText.length.toLocaleString()}자 — 압축 후 전송 중...`);
 
-  // 자막 압축 + 워크플로우 디스패치
-  let subtitleData;
-  try {
-    subtitleData = await _compressText(subtitleText);
-  } catch (e) {
-    console.error('Compression failed:', e);
-    if (subtitleText.length <= 60000) {
-      subtitleData = subtitleText;
-    } else {
-      showNotification('자막이 너무 깁니다. 텍스트를 줄여서 다시 시도해 주세요.', 'error');
+  // 자막이 있으면 압축, 없으면 빈 문자열
+  let subtitleData = '';
+  if (subtitleText) {
+    _setSubtitleStatus(`자막 ${subtitleText.length.toLocaleString()}자 — 압축 후 전송 중...`);
+    try {
+      subtitleData = await _compressText(subtitleText);
+    } catch (e) {
+      console.error('Compression failed:', e);
+      if (subtitleText.length <= 60000) {
+        subtitleData = subtitleText;
+      } else {
+        showNotification('자막이 너무 깁니다. 텍스트를 줄여서 다시 시도해 주세요.', 'error');
+        btn.disabled = false;
+        btn.textContent = '분석 요청';
+        return;
+      }
+    }
+
+    if (subtitleData.length > 65000) {
+      showNotification('압축 후에도 데이터가 너무 큽니다. 더 짧은 영상으로 시도해 주세요.', 'error');
       btn.disabled = false;
       btn.textContent = '분석 요청';
       return;
     }
-  }
-
-  if (subtitleData.length > 65000) {
-    showNotification('압축 후에도 데이터가 너무 큽니다. 더 짧은 영상으로 시도해 주세요.', 'error');
-    btn.disabled = false;
-    btn.textContent = '분석 요청';
-    return;
+  } else {
+    _setSubtitleStatus('자막 없이 요청 — 서버에서 자동 추출 시도 중...');
   }
 
   const codeMap = {
