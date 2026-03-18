@@ -39,7 +39,36 @@ class ClaudeClient(LLMClient):
 
         # JSON 블록 추출 (```json ... ``` 또는 순수 JSON)
         json_text = _extract_json(raw_text)
-        return json.loads(json_text)
+        try:
+            return json.loads(json_text)
+        except json.JSONDecodeError:
+            # LLM이 깨진 JSON을 반환한 경우 자동 복구 시도
+            repaired = _repair_json(json_text)
+            return json.loads(repaired)
+
+
+def _repair_json(text: str) -> str:
+    """깨진 JSON을 최대한 복구한다."""
+    import re
+    # 흔한 오류: 문자열 내 이스케이프 안 된 따옴표, trailing comma
+    # trailing comma 제거: ,] → ] , ,} → }
+    text = re.sub(r',\s*([}\]])', r'\1', text)
+    # 줄바꿈이 문자열 안에 들어간 경우
+    # 각 줄이 유효한지 점진적으로 잘라서 시도
+    # 마지막 수단: 깨진 위치까지 잘라서 배열/객체 닫기
+    try:
+        json.loads(text)
+        return text
+    except json.JSONDecodeError as e:
+        # 깨진 위치에서 잘라서 닫기 시도
+        pos = e.pos or 0
+        truncated = text[:pos].rstrip().rstrip(',')
+        # 열린 괄호 수 세서 닫기
+        open_braces = truncated.count('{') - truncated.count('}')
+        open_brackets = truncated.count('[') - truncated.count(']')
+        truncated += ']' * open_brackets + '}' * open_braces
+        logger.warning("JSON 복구 시도: 원본 %d자 → %d자로 잘라냄", len(text), len(truncated))
+        return truncated
 
 
 def _extract_json(text: str) -> str:
