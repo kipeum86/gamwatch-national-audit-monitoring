@@ -104,7 +104,7 @@ async function _dispatchWorkflow(inputs) {
   const apiUrl = `https://api.github.com/repos/${CONFIG.GH_OWNER}/${CONFIG.GH_REPO}/actions/workflows/${CONFIG.GH_WORKFLOW_ID}/dispatches`;
 
   try {
-    const body = { ref: 'main' };
+    const body = { ref: 'master' };
     if (inputs && Object.keys(inputs).length > 0) {
       body.inputs = inputs;
     }
