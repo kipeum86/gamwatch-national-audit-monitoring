@@ -121,12 +121,14 @@ function populateFilters() {
 
   // 보고서 모달 필터도 동일하게 설정
   const reportDate = document.getElementById('report-date');
-  dates.forEach(d => {
-    const opt = document.createElement('option');
-    opt.value = d;
-    opt.textContent = d;
-    reportDate.appendChild(opt);
-  });
+  if (reportDate) {
+    dates.forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d;
+      opt.textContent = d;
+      reportDate.appendChild(opt);
+    });
+  }
 
   const reportComm = document.getElementById('report-committee');
   if (reportComm) {
