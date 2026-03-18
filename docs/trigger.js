@@ -46,10 +46,21 @@ function openManualModal() {
   document.getElementById('manual-date').value = today;
   // 이전 상태 초기화
   _setSubtitleStatus('');
-  document.getElementById('manual-subtitle-area').style.display = 'none';
   document.getElementById('manual-subtitle').value = '';
+  document.getElementById('manual-char-count').textContent = '';
   document.getElementById('btn-manual-submit').disabled = false;
   document.getElementById('btn-manual-submit').textContent = '분석 요청';
+  // 안내 가이드 기본 열기
+  document.getElementById('transcript-guide').open = true;
+
+  // 자막 글자 수 표시 이벤트
+  const textarea = document.getElementById('manual-subtitle');
+  textarea.oninput = () => {
+    const len = textarea.value.trim().length;
+    document.getElementById('manual-char-count').textContent = len > 0
+      ? `${len.toLocaleString()}자 입력됨`
+      : '';
+  };
 }
 
 function closeManualModal() {
@@ -62,6 +73,7 @@ async function submitManualVideo() {
   const url = document.getElementById('manual-url').value.trim();
   const committee = document.getElementById('manual-committee').value;
   const date = document.getElementById('manual-date').value;
+  const subtitleText = document.getElementById('manual-subtitle').value.trim();
 
   if (!url) {
     showNotification('유튜브 URL을 입력해 주세요.', 'error');
@@ -79,48 +91,29 @@ async function submitManualVideo() {
     return;
   }
 
-  const btn = document.getElementById('btn-manual-submit');
-  btn.disabled = true;
-  btn.textContent = '자막 추출 중...';
-
-  // 1단계: 자막 추출 시도
-  _setSubtitleStatus('자막을 자동으로 추출하고 있습니다...');
-  let subtitleText = await _fetchSubtitle(videoId);
-
-  // 자동추출 실패 → 수동 입력 확인
   if (!subtitleText) {
-    const manualArea = document.getElementById('manual-subtitle-area');
-    const manualText = document.getElementById('manual-subtitle').value.trim();
-
-    if (manualArea.style.display === 'none') {
-      // 처음 실패: 수동 입력 안내 표시
-      manualArea.style.display = 'block';
-      _setSubtitleStatus('자동 추출에 실패했습니다. 아래에 자막을 직접 붙여넣어 주세요.');
-      btn.disabled = false;
-      btn.textContent = '분석 요청';
-      return;
-    }
-
-    if (!manualText) {
-      showNotification('자막 텍스트를 붙여넣어 주세요.', 'error');
-      btn.disabled = false;
-      btn.textContent = '분석 요청';
-      return;
-    }
-
-    subtitleText = manualText;
+    showNotification('자막 텍스트를 붙여넣어 주세요. 위 안내를 참고하세요.', 'error');
+    // 가이드 열기
+    document.getElementById('transcript-guide').open = true;
+    return;
   }
 
-  // 2단계: 자막 압축 + 워크플로우 디스패치
-  _setSubtitleStatus(`자막 추출 완료 (${subtitleText.length.toLocaleString()}자). 분석 요청 중...`);
-  btn.textContent = '분석 요청 중...';
+  if (subtitleText.length < 100) {
+    showNotification('자막이 너무 짧습니다. 전체 스크립트를 복사해 주세요.', 'error');
+    return;
+  }
 
+  const btn = document.getElementById('btn-manual-submit');
+  btn.disabled = true;
+  btn.textContent = '분석 요청 중...';
+  _setSubtitleStatus(`자막 ${subtitleText.length.toLocaleString()}자 — 압축 후 전송 중...`);
+
+  // 자막 압축 + 워크플로우 디스패치
   let subtitleData;
   try {
     subtitleData = await _compressText(subtitleText);
   } catch (e) {
     console.error('Compression failed:', e);
-    // 압축 실패시 원문 전달 (65K 이하인 경우)
     if (subtitleText.length <= 60000) {
       subtitleData = subtitleText;
     } else {
@@ -132,7 +125,7 @@ async function submitManualVideo() {
   }
 
   if (subtitleData.length > 65000) {
-    showNotification('자막 데이터가 너무 큽니다. 더 짧은 영상으로 시도해 주세요.', 'error');
+    showNotification('압축 후에도 데이터가 너무 큽니다. 더 짧은 영상으로 시도해 주세요.', 'error');
     btn.disabled = false;
     btn.textContent = '분석 요청';
     return;
@@ -295,11 +288,52 @@ async function _compressText(text) {
   return btoa(binary);
 }
 
-function _setSubtitleStatus(msg) {
+function _setSubtitleStatus(msg, type) {
   const el = document.getElementById('manual-subtitle-status');
   if (el) {
     el.textContent = msg;
     el.style.display = msg ? 'block' : 'none';
+    el.className = 'subtitle-status' + (type === 'error' ? ' subtitle-status-error' : '');
+  }
+}
+
+async function autoFetchSubtitle() {
+  const url = document.getElementById('manual-url').value.trim();
+  if (!url) {
+    showNotification('유튜브 URL을 먼저 입력해 주세요.', 'error');
+    return;
+  }
+
+  const videoId = _extractVideoId(url);
+  if (!videoId) {
+    showNotification('올바른 유튜브 URL을 입력해 주세요.', 'error');
+    return;
+  }
+
+  const btn = document.getElementById('btn-auto-subtitle');
+  btn.disabled = true;
+  btn.textContent = '추출 중...';
+  _setSubtitleStatus('Invidious API에서 자막을 가져오는 중...');
+
+  try {
+    const text = await _fetchSubtitle(videoId);
+    if (text) {
+      const textarea = document.getElementById('manual-subtitle');
+      textarea.value = text;
+      textarea.dispatchEvent(new Event('input'));
+      _setSubtitleStatus(`자막 자동 추출 완료 (${text.length.toLocaleString()}자)`);
+      showNotification('자막 자동 추출에 성공했습니다!', 'success');
+    } else {
+      _setSubtitleStatus('자동 추출 실패 — 아래 안내를 따라 수동으로 복사해 주세요.', 'error');
+      document.getElementById('transcript-guide').open = true;
+    }
+  } catch (e) {
+    console.error('Auto subtitle fetch error:', e);
+    _setSubtitleStatus('자동 추출 실패 — 아래 안내를 따라 수동으로 복사해 주세요.', 'error');
+    document.getElementById('transcript-guide').open = true;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '자막 자동 추출';
   }
 }
 

@@ -1,6 +1,8 @@
-"""유튜브 자막 추출: youtube-transcript-api 우선, yt-dlp fallback."""
+"""유튜브 자막 추출: youtube-transcript-api → NotebookLM → yt-dlp fallback."""
 
+import asyncio
 import logging
+import os
 import re
 import subprocess
 import tempfile
@@ -13,11 +15,12 @@ def extract_subtitles(video_id: str) -> tuple[str | None, str]:
     """유튜브 영상에서 한국어 자막을 추출한다.
 
     1차: youtube-transcript-api (봇 차단에 강함)
-    2차: yt-dlp fallback
+    2차: NotebookLM (비공식 API, NOTEBOOKLM_AUTH_JSON 설정 시)
+    3차: yt-dlp fallback
 
     Returns:
         (자막 텍스트, 자막 소스) 튜플.
-        자막 소스: "stenographer" / "auto_generated" / "none"
+        자막 소스: "stenographer" / "auto_generated" / "notebooklm" / "none"
         자막이 없으면 (None, "none") 반환.
     """
     # 1차 시도: youtube-transcript-api
@@ -25,8 +28,15 @@ def extract_subtitles(video_id: str) -> tuple[str | None, str]:
     if result[0] is not None:
         return result
 
-    # 2차 시도: yt-dlp
-    logger.info("transcript-api 실패, yt-dlp로 재시도: %s", video_id)
+    # 2차 시도: NotebookLM (비공식 API, 인증 있을 때만)
+    if os.environ.get("NOTEBOOKLM_AUTH_JSON", "").strip():
+        logger.info("transcript-api 실패, NotebookLM으로 재시도: %s", video_id)
+        result = _try_notebooklm(video_id)
+        if result[0] is not None:
+            return result
+
+    # 3차 시도: yt-dlp
+    logger.info("NotebookLM 미사용/실패, yt-dlp로 재시도: %s", video_id)
     result = _try_ytdlp(video_id)
     if result[0] is not None:
         return result
@@ -107,6 +117,46 @@ def _transcript_to_text(transcript) -> str | None:
     if not lines:
         return None
     return "\n".join(lines)
+
+
+def _try_notebooklm(video_id: str) -> tuple[str | None, str]:
+    """NotebookLM 비공식 API로 YouTube 자막을 추출한다.
+
+    NOTEBOOKLM_AUTH_JSON 환경변수에 Playwright storage_state.json 내용이
+    있어야 동작한다. 비공식 API이므로 언제든 실패할 수 있다.
+    """
+    try:
+        from notebooklm import NotebookLMClient
+    except ImportError:
+        logger.warning("notebooklm-py 미설치 — 스킵")
+        return None, "none"
+
+    async def _extract():
+        async with await NotebookLMClient.from_storage() as client:
+            nb = await client.notebooks.create(f"gamwatch-temp-{video_id}")
+            try:
+                url = f"https://www.youtube.com/watch?v={video_id}"
+                source = await client.sources.add_url(
+                    nb.id, url, wait=True, wait_timeout=180.0,
+                )
+                fulltext = await client.sources.get_fulltext(nb.id, source.id)
+                return fulltext.content
+            finally:
+                try:
+                    await client.notebooks.delete(nb.id)
+                except Exception:
+                    pass
+
+    try:
+        text = asyncio.run(_extract())
+        if text and len(text) > 100:
+            logger.info("NotebookLM: 자막 추출 성공 (%d자)", len(text))
+            return text, "notebooklm"
+        logger.warning("NotebookLM: 추출 텍스트 부족 (%d자)", len(text) if text else 0)
+        return None, "none"
+    except Exception as e:
+        logger.warning("NotebookLM 추출 실패: %s: %s", type(e).__name__, e)
+        return None, "none"
 
 
 def _try_ytdlp(video_id: str) -> tuple[str | None, str]:

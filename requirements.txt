@@ -4,3 +4,4 @@ anthropic>=0.42.0
 requests>=2.32.0
 pyyaml>=6.0.2
 youtube-transcript-api>=1.0.0
+notebooklm-py>=0.3.0

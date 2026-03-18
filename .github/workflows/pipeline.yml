@@ -66,6 +66,7 @@ jobs:
           MANUAL_COMMITTEE_CODE: ${{ github.event.inputs.committee_code }}
           MANUAL_EVENT_DATE: ${{ github.event.inputs.event_date }}
           SUBTITLE_DATA: ${{ github.event.inputs.subtitle_data }}
+          NOTEBOOKLM_AUTH_JSON: ${{ secrets.NOTEBOOKLM_AUTH_JSON }}
         run: python -m pipeline.main
 
       - name: Cleanup credentials
