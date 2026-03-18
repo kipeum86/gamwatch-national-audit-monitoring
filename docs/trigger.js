@@ -50,8 +50,8 @@ function openManualModal() {
   document.getElementById('manual-char-count').textContent = '';
   document.getElementById('btn-manual-submit').disabled = false;
   document.getElementById('btn-manual-submit').textContent = '분석 요청';
-  // 안내 가이드 기본 열기
-  document.getElementById('transcript-guide').open = true;
+  // 자막 수동입력은 접힌 상태로 시작
+  document.getElementById('transcript-guide').open = false;
 
   // 자막 글자 수 표시 이벤트
   const textarea = document.getElementById('manual-subtitle');
@@ -96,13 +96,6 @@ async function submitManualVideo() {
     return;
   }
 
-  // 자막 없이 요청 시 확인
-  if (!subtitleText) {
-    if (!confirm('자막 없이 분석을 요청합니다.\n서버에서 자동 추출을 시도합니다 (NotebookLM → yt-dlp).\n계속하시겠습니까?')) {
-      return;
-    }
-  }
-
   const btn = document.getElementById('btn-manual-submit');
   btn.disabled = true;
   btn.textContent = '분석 요청 중...';
@@ -132,7 +125,7 @@ async function submitManualVideo() {
       return;
     }
   } else {
-    _setSubtitleStatus('자막 없이 요청 — 서버에서 자동 추출 시도 중...');
+    _setSubtitleStatus('서버에서 자막을 자동 추출합니다...');
   }
 
   const codeMap = {

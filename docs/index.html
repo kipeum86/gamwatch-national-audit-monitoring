@@ -7,6 +7,17 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <!-- 비밀번호 게이트 -->
+  <div id="auth-gate" class="auth-gate">
+    <div class="auth-box">
+      <h2 class="auth-title">GamWatch</h2>
+      <p class="auth-desc">접근 비밀번호를 입력하세요.</p>
+      <input type="password" id="auth-password" class="auth-input" placeholder="비밀번호" onkeydown="if(event.key==='Enter')checkAuth()">
+      <button class="btn btn-primary btn-full" onclick="checkAuth()">확인</button>
+      <p id="auth-error" class="auth-error" style="display:none;">비밀번호가 틀렸습니다.</p>
+    </div>
+  </div>
+
   <!-- 헤더 -->
   <header class="header">
     <div class="header-left">
@@ -138,13 +149,10 @@
         <button class="modal-close" onclick="closeManualModal()">&times;</button>
       </div>
       <div class="modal-body">
-        <p class="modal-description">유튜브 영상 URL을 입력하고 자막을 추출하면 AI가 게임 산업 관련 발언을 분석합니다. 자막 없이도 요청 가능합니다 (서버에서 자동 추출 시도).</p>
+        <p class="modal-description">유튜브 영상 URL만 입력하면 서버에서 자막을 자동 추출하여 AI가 분석합니다. 자막 추출이 잘 안 되는 경우에만 직접 붙여넣으세요.</p>
         <div class="form-group">
           <label for="manual-url">유튜브 URL *</label>
-          <div class="input-with-btn">
-            <input type="text" id="manual-url" placeholder="https://www.youtube.com/watch?v=...">
-            <button id="btn-auto-subtitle" class="btn btn-secondary" onclick="autoFetchSubtitle()">자막 자동 추출</button>
-          </div>
+          <input type="text" id="manual-url" placeholder="https://www.youtube.com/watch?v=...">
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -166,40 +174,17 @@
           </div>
         </div>
 
-        <!-- 자막 입력 (항상 표시) -->
-        <div class="form-group">
-          <label for="manual-subtitle">자막 텍스트 (없으면 서버에서 자동 추출)</label>
-          <div id="manual-subtitle-status" class="subtitle-status" style="display:none;"></div>
-          <textarea id="manual-subtitle" rows="8" placeholder="아래 안내를 따라 YouTube에서 자막을 복사한 뒤 여기에 붙여넣으세요."></textarea>
-          <p class="form-hint" id="manual-char-count"></p>
-        </div>
+        <div id="manual-subtitle-status" class="subtitle-status" style="display:none;"></div>
 
-        <!-- YouTube 스크립트 복사 안내 -->
+        <!-- 자막 수동 입력 (접힘) -->
         <details class="transcript-guide" id="transcript-guide">
-          <summary class="transcript-guide-toggle">YouTube에서 자막 복사하는 방법</summary>
+          <summary class="transcript-guide-toggle">자막 직접 붙여넣기 (선택사항)</summary>
           <div class="transcript-guide-body">
-            <ol class="transcript-steps">
-              <li>
-                <strong>YouTube 영상 페이지 열기</strong>
-                <p>분석할 영상의 YouTube 페이지로 이동합니다.</p>
-              </li>
-              <li>
-                <strong>영상 아래 "...더보기" 클릭</strong>
-                <p>영상 제목/설명 아래의 <span class="guide-highlight">...더보기</span> 버튼을 클릭합니다.</p>
-              </li>
-              <li>
-                <strong>"스크립트 보기" 클릭</strong>
-                <p>펼쳐진 영역 하단에 <span class="guide-highlight">스크립트 보기</span> 버튼이 있습니다.</p>
-              </li>
-              <li>
-                <strong>전체 선택 후 복사</strong>
-                <p>스크립트 패널에서 <kbd>Ctrl</kbd>+<kbd>A</kbd> (Mac: <kbd>Cmd</kbd>+<kbd>A</kbd>)로 전체 선택 후 <kbd>Ctrl</kbd>+<kbd>C</kbd>로 복사합니다.</p>
-              </li>
-              <li>
-                <strong>위 텍스트 영역에 붙여넣기</strong>
-                <p><kbd>Ctrl</kbd>+<kbd>V</kbd>로 붙여넣으면 자동으로 글자 수가 표시됩니다.</p>
-              </li>
-            </ol>
+            <p class="manual-subtitle-hint">서버 자동 추출이 실패할 경우, YouTube에서 직접 자막을 복사하여 붙여넣을 수 있습니다.</p>
+            <div class="form-group" style="margin-bottom:8px;">
+              <textarea id="manual-subtitle" rows="6" placeholder="YouTube 영상 → 더보기 → 스크립트 보기 → 전체 선택(Ctrl+A) → 복사(Ctrl+C) → 여기에 붙여넣기(Ctrl+V)"></textarea>
+              <p class="form-hint" id="manual-char-count"></p>
+            </div>
           </div>
         </details>
 
@@ -232,6 +217,22 @@
   <!-- 알림 -->
   <div id="notification" class="notification" style="display:none;"></div>
 
+  <script>
+    const AUTH_HASH = '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8'; // sha256('260320') - NOT actual check, see below
+    function checkAuth() {
+      const pw = document.getElementById('auth-password').value;
+      if (pw === '260320') {
+        localStorage.setItem('gamwatch_auth', 'ok');
+        document.getElementById('auth-gate').style.display = 'none';
+      } else {
+        document.getElementById('auth-error').style.display = 'block';
+      }
+    }
+    // 이미 인증된 경우 게이트 숨김
+    if (localStorage.getItem('gamwatch_auth') === 'ok') {
+      document.getElementById('auth-gate').style.display = 'none';
+    }
+  </script>
   <script src="config.js"></script>
   <script src="app.js"></script>
   <script src="report.js"></script>
