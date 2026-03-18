@@ -3,6 +3,9 @@ studio-*.json
 service-account*.json
 sa.json
 
+# Design docs
+gamwatch-design-spec-final.md
+
 # Environment
 .env
 .env.*
