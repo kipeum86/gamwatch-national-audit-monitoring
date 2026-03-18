@@ -1,8 +1,10 @@
 name: GamWatch Pipeline
 
 on:
+  push:
+    paths:
+      - '.github/workflows/pipeline.yml'
   schedule:
-    # 매일 새벽 2시 KST (= UTC 17:00 전날)
     - cron: '0 17 * * *'
   workflow_dispatch:
     inputs:
