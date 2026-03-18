@@ -10,6 +10,26 @@ let dataModel = []; // 안건 기준 join된 최종 모델
 let allExpanded = false;
 
 // ──────────────────────────────────────────────
+// 유틸: Sheets 날짜 시리얼 넘버 → YYYY-MM-DD 변환
+// ──────────────────────────────────────────────
+
+function _fixDate(val) {
+  if (!val) return val;
+  // 이미 YYYY-MM-DD 형식이면 그대로
+  if (/^\d{4}-\d{2}-\d{2}/.test(val)) return val.slice(0, 10);
+  // 숫자(Excel 시리얼 넘버)이면 변환
+  const num = Number(val);
+  if (!isNaN(num) && num > 40000 && num < 60000) {
+    const d = new Date((num - 25569) * 86400000);
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(d.getUTCDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+  return val;
+}
+
+// ──────────────────────────────────────────────
 // 초기화
 // ──────────────────────────────────────────────
 
@@ -82,6 +102,7 @@ function buildDataModel() {
 
   dataModel = allAgendas.map(a => ({
     ...a,
+    date: _fixDate(a.date),
     statements: (stmtMap[a.agenda_id] || []).sort((x, y) => (x.sort_order || 0) - (y.sort_order || 0)),
     newsArticles: newsMap[a.agenda_id] || [],
     isCompanyMentioned: a.is_company_mentioned === 'TRUE',

@@ -80,14 +80,14 @@ class SheetsClient:
             for row in rows[1:]
         ]
 
-    def append_rows(self, tab_name: str, rows: list[list[Any]]) -> None:
-        """탭 끝에 행들을 추가한다."""
+    def append_rows(self, tab_name: str, rows: list[list[Any]], raw: bool = False) -> None:
+        """탭 끝에 행들을 추가한다. raw=True이면 텍스트 그대로 저장 (날짜 자동변환 방지)."""
         if not rows:
             return
         self.service.spreadsheets().values().append(
             spreadsheetId=self.spreadsheet_id,
             range=f"{tab_name}!A1",
-            valueInputOption="USER_ENTERED",
+            valueInputOption="RAW" if raw else "USER_ENTERED",
             insertDataOption="INSERT_ROWS",
             body={"values": rows},
         ).execute()
@@ -245,16 +245,16 @@ class SheetsClient:
         """안건 목록을 agendas 탭에 기록한다."""
         headers = HEADERS[TAB_AGENDAS]
         rows = [[a.get(h, "") for h in headers] for a in agendas]
-        self.append_rows(TAB_AGENDAS, rows)
+        self.append_rows(TAB_AGENDAS, rows, raw=True)
 
     def write_statements(self, statements: list[dict]) -> None:
         """발언 목록을 statements 탭에 기록한다."""
         headers = HEADERS[TAB_STATEMENTS]
         rows = [[s.get(h, "") for h in headers] for s in statements]
-        self.append_rows(TAB_STATEMENTS, rows)
+        self.append_rows(TAB_STATEMENTS, rows, raw=True)
 
     def write_news_articles(self, articles: list[dict]) -> None:
         """뉴스 기사 목록을 news_articles 탭에 기록한다."""
         headers = HEADERS[TAB_NEWS_ARTICLES]
         rows = [[a.get(h, "") for h in headers] for a in articles]
-        self.append_rows(TAB_NEWS_ARTICLES, rows)
+        self.append_rows(TAB_NEWS_ARTICLES, rows, raw=True)
