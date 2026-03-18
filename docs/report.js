@@ -107,30 +107,35 @@ function generateReport() {
 function formatReport(date, agendas) {
   const formattedDate = formatDateKorean(date);
   const dateRef = _getDateRef(date);
+  const dateLabel = dateRef ? `${dateRef}(${formattedDate})` : formattedDate;
 
-  // 상임위별 그룹핑
-  const byCommittee = {};
+  // 상임위별 그룹핑 (순서 유지)
+  const byCommittee = new Map();
   agendas.forEach(a => {
-    if (!byCommittee[a.committee]) byCommittee[a.committee] = [];
-    byCommittee[a.committee].push(a);
+    if (!byCommittee.has(a.committee)) byCommittee.set(a.committee, []);
+    byCommittee.get(a.committee).push(a);
   });
 
   let report = '';
 
   // ── 1. 인사말 ──
-  report += `안녕하세요. ${dateRef}(${formattedDate}) 진행된 주요 상임위 국정감사 내용(게임 및 IT 관련) 정리하여 안내드립니다.\n\n`;
+  report += `안녕하세요. ${dateLabel} 진행된 주요 상임위 국정감사 내용(게임 및 IT 관련) 정리하여 안내드립니다.\n\n`;
 
-  // ── 2. 상임위별 요약 (1-2줄) ──
-  for (const [comm, items] of Object.entries(byCommittee)) {
-    const summaries = items.map(a => a.summary || a.title).join(', ');
-    report += `${comm}: ${summaries}\n`;
+  // ── 2. 상임위별 요약 ──
+  for (const [comm, items] of byCommittee) {
+    // 요약은 summary를 연결하되, 너무 길면 title로 대체
+    const summaryTexts = items.map(a => {
+      const s = a.summary || a.title;
+      return s.length > 80 ? a.title : s;
+    });
+    report += `${comm}: ${summaryTexts.join('; ')}\n`;
   }
 
   report += `\n자세한 사항은 아래 내용 참고 부탁드립니다. 감사합니다.\n\n\n`;
 
   // ── 3. 상세 내용 ──
-  for (const [comm, items] of Object.entries(byCommittee)) {
-    // 상임위 헤더 + △안건 목록
+  for (const [comm, items] of byCommittee) {
+    // 상임위 헤더: △안건1, △안건2
     const topicList = items.map(a => `△${a.title}`).join(', ');
     report += `${comm}: ${topicList}\n`;
 
@@ -140,11 +145,12 @@ function formatReport(date, agendas) {
       // 발언자
       agenda.statements.forEach(s => {
         const party = s.speaker_party ? `(${s.speaker_party})` : '';
-        const role = s.speaker_role === 'questioner' ? ' 의원' : '';
-        report += ` - ${party}${s.speaker_name}${role}: ${s.content}\n`;
+        // 질의자: (당)이름 의원, 답변자: 이름 (직함 포함된 경우 그대로)
+        const suffix = s.speaker_role === 'questioner' ? ' 의원' : '';
+        report += ` - ${party}${s.speaker_name}${suffix}: ${s.content}\n`;
       });
 
-      // 게임사 언급
+      // 게임사 언급 상세
       if (agenda.isCompanyMentioned && agenda.company_mention_detail) {
         report += `  ※ ${agenda.company_mention_detail}\n`;
       }
@@ -158,7 +164,8 @@ function formatReport(date, agendas) {
   if (allNews.length > 0) {
     report += '주요 기사\n';
     allNews.forEach((n, idx) => {
-      report += `${idx + 1}. ${n.title}\n`;
+      const pub = n.publisher ? ` (${n.publisher})` : '';
+      report += `${idx + 1}. ${n.title}${pub}\n`;
       report += ` - ${n.url}\n\n`;
     });
   }

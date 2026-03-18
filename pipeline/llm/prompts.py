@@ -4,8 +4,8 @@
 def get_pass1_system_prompt(company_names: list[str]) -> str:
     """Pass 1: 자막 텍스트 → 구조화된 안건 JSON."""
     companies = ", ".join(company_names)
-    return f"""당신은 한국 국정감사 영상 자막을 분석하는 전문가입니다.
-주어진 자막 텍스트에서 모든 안건(질의 주제)을 식별하고 구조화해 주세요.
+    return f"""당신은 한국 국정감사 영상 자막을 분석하여 게임 산업 정책팀에 보고할 수 있는 수준으로 정리하는 전문가입니다.
+주어진 자막 텍스트에서 모든 안건(질의 주제)을 식별하고, 정책 보고에 활용할 수 있도록 구체적으로 구조화해 주세요.
 
 반드시 아래 JSON 형식으로만 응답하세요. 다른 텍스트를 포함하지 마세요.
 
@@ -13,17 +13,17 @@ def get_pass1_system_prompt(company_names: list[str]) -> str:
 {{
   "agendas": [
     {{
-      "title": "안건 제목 (간결하게)",
+      "title": "안건 제목 (핵심 키워드 중심, 간결하게)",
       "category": "game" 또는 "general",
-      "summary": "1-2줄 요약",
+      "summary": "안건 요약 (아래 작성 기준 참고)",
       "is_company_mentioned": true 또는 false,
-      "company_mention_detail": "게임사 언급 내용 (없으면 빈 문자열)",
+      "company_mention_detail": "게임사 언급 맥락 (아래 작성 기준 참고)",
       "statements": [
         {{
           "speaker_name": "의원 또는 답변자 이름",
           "speaker_party": "당적 약칭 (민/국/조/진/개/무 등, 답변자는 빈 문자열)",
           "speaker_role": "questioner" 또는 "respondent",
-          "content": "발언 핵심 내용 요약"
+          "content": "발언 내용 요약 (아래 작성 기준 참고)"
         }}
       ]
     }}
@@ -37,9 +37,11 @@ def get_pass1_system_prompt(company_names: list[str]) -> str:
 - 게임 산업, 게임 회사, 확률형 아이템, 셧다운제, 게임 이용등급
 - 게임 과몰입, 게임 사행성, e스포츠, 게임물관리위원회
 - 게임 관련 규제, 법안, 정책
+- 인앱결제, 앱마켓 수수료 등 게임사에 영향을 미치는 플랫폼 이슈
+- 게임사 근로환경, 노동 이슈 (게임사가 직접 언급된 경우)
 - 위 주제와 직접 관련된 질의·답변
 
-**"general" 카테고리** (1줄 요약):
+**"general" 카테고리** (간략 정리):
 - 그 외 모든 안건
 - statements 배열을 빈 배열 []로 작성
 - summary는 1줄로 간결하게
@@ -47,15 +49,36 @@ def get_pass1_system_prompt(company_names: list[str]) -> str:
 ## 주요 게임사 목록
 {companies}
 
-## 작성 규칙
+## 작성 기준 (매우 중요)
+
+### summary 작성법
+- game 안건: 어떤 문제가 제기되었고, 어떤 요구가 있었는지 맥락이 드러나도록 2-3문장으로 작성
+- 좋은 예: "게임·음악 산업이 한류 확산에 기여하고 있음에도 세액공제 대상에서 제외된 것은 부당하다며, 중소·인디게임사 중심의 세제지원 확대를 기재부에 촉구함"
+- 나쁜 예: "게임 세제 지원 논의"
+
+### content(발언 요약) 작성법
+- 의원이 어떤 문제를 지적했고, 무엇을 요구했는지 구체적으로 서술
+- "~을 지적하며, ~을 촉구함" / "~을 비판하며, ~을 요구함" 등 실제 보고서 문체 사용
+- 좋은 예: "(민)조승래 의원: 게임·음악 산업이 한류 확산과 국가 이미지 제고에 기여하고 있음에도 세액공제 대상에서 제외된 것은 부당하다며, 중소·인디게임사 중심의 세제지원 확대를 기재부에 촉구함"
+- 나쁜 예: "게임산업 세제 지원 현황 질의"
+
+### company_mention_detail 작성법
+- 단순히 "넥슨 언급"이 아닌, 어떤 맥락에서 왜 언급되었는지 기술
+- 좋은 예: "검은사막은 게임 내에 조선시대 그림과 서울 등 국가유산 요소를 적극 반영하여, 이용자가 자연스럽게 한국의 이미지를 체험하도록 함(게임을 통한 한류 확산 대표 사례)"
+- 나쁜 예: "검은사막 언급됨"
+
+### 답변자 speaker_name 작성법
+- "문체부 장관", "게임위 위원장", "콘진원 원장" 등 직함으로 표기
+- 이름이 명확하면 "안형준 국가데이터처장" 형태도 가능
+
+## 기타 규칙
 
 1. 안건 구분은 질의 주제가 바뀌는 지점 기준
 2. 당적 추론: "더불어민주당" → 민, "국민의힘" → 국, "조국혁신당" → 조, "진보당" → 진, "개혁신당" → 개, 무소속 → 무
-3. 답변자(장관, 위원장, 기관장 등)의 speaker_party는 빈 문자열
+3. 답변자의 speaker_party는 빈 문자열
 4. game 안건의 statements에는 주요 질의 의원과 답변자를 모두 포함
-5. 주요 게임사가 직접 언급되면 is_company_mentioned=true, company_mention_detail에 맥락 기술
-6. 모든 텍스트는 한국어로 작성
-7. 안건이 없으면 빈 agendas 배열 반환"""
+5. 모든 텍스트는 한국어로 작성
+6. 안건이 없으면 빈 agendas 배열 반환"""
 
 
 def get_pass1_user_prompt(subtitle_text: str) -> str:
@@ -75,7 +98,8 @@ def get_pass2_system_prompt(company_names: list[str]) -> str:
 
 게임 관련 키워드:
 게임, 온라인게임, 모바일게임, 확률형, 가챠, 셧다운, 게임물등급위원회, 게임산업, e스포츠,
-플랫폼 규제(게임 맥락), 콘텐츠 산업(게임 포함 시), {companies}
+인앱결제, 앱마켓 수수료, 플랫폼 규제(게임 맥락), 콘텐츠 산업(게임 포함 시),
+게임사 근로환경, 포괄임금제, 이석관리제, {companies}
 
 반드시 아래 JSON 형식으로만 응답하세요:
 
@@ -88,15 +112,15 @@ def get_pass2_system_prompt(company_names: list[str]) -> str:
       "updated_agenda": {{
         "title": "안건 제목",
         "category": "game",
-        "summary": "상세 요약",
+        "summary": "상세 요약 (어떤 문제가 제기되었고 어떤 요구가 있었는지 맥락이 드러나도록)",
         "is_company_mentioned": true 또는 false,
-        "company_mention_detail": "",
+        "company_mention_detail": "게임사 언급 맥락 (단순 나열이 아닌 배경 설명)",
         "statements": [
           {{
             "speaker_name": "이름",
             "speaker_party": "당적",
             "speaker_role": "questioner 또는 respondent",
-            "content": "발언 요약"
+            "content": "~을 지적하며, ~을 촉구함 형태로 구체적 서술"
           }}
         ]
       }}
