@@ -1,6 +1,9 @@
 /**
- * GamWatch 파이프라인 트리거 + 수동 영상 분석 요청.
+ * GamWatch 파이프라인 트리거 + 상태 모니터링 + 설정.
  */
+
+let _pollTimer = null;
+let _pipelineStartTime = null;
 
 // ──────────────────────────────────────────────
 // 전체 파이프라인 실행
@@ -17,7 +20,7 @@ async function triggerPipeline() {
   try {
     const success = await _dispatchWorkflow({});
     if (success) {
-      showNotification('실행이 요청되었습니다. 처리에 약 10~30분 소요됩니다.', 'success');
+      _startStatusPolling();
     }
   } finally {
     btn.disabled = false;
@@ -31,7 +34,6 @@ async function triggerPipeline() {
 
 function openManualModal() {
   document.getElementById('manual-modal').style.display = 'flex';
-  // 기본 날짜: 오늘
   const today = new Date().toISOString().slice(0, 10);
   document.getElementById('manual-date').value = today;
 }
@@ -52,13 +54,11 @@ async function submitManualVideo() {
     return;
   }
 
-  // 유튜브 URL 형식 간단 검증
   if (!url.includes('youtube.com/') && !url.includes('youtu.be/')) {
     showNotification('올바른 유튜브 URL을 입력해 주세요.', 'error');
     return;
   }
 
-  // 상임위 코드 매핑
   const codeMap = {
     '정무위원회': 'jungmu',
     '과학기술정보방송통신위원회': 'gwabang',
@@ -77,16 +77,128 @@ async function submitManualVideo() {
 
   const success = await _dispatchWorkflow(inputs);
   if (success) {
-    showNotification(
-      `영상 분석이 요청되었습니다.\n처리에 약 10~30분 소요됩니다.`,
-      'success',
-    );
     closeManualModal();
-    // 입력 초기화
     document.getElementById('manual-url').value = '';
     document.getElementById('manual-committee').value = '';
+    _startStatusPolling();
   }
 }
+
+// ──────────────────────────────────────────────
+// 파이프라인 상태 모니터링
+// ──────────────────────────────────────────────
+
+function _startStatusPolling() {
+  _pipelineStartTime = Date.now();
+  _showStatus('running', '파이프라인 시작 요청 중...', '');
+  // 첫 체크는 10초 후 (GitHub가 run을 생성하는 데 시간이 걸림)
+  setTimeout(() => _pollStatus(), 10000);
+  // 이후 15초마다 폴링
+  if (_pollTimer) clearInterval(_pollTimer);
+  _pollTimer = setInterval(() => _pollStatus(), 15000);
+}
+
+async function _pollStatus() {
+  try {
+    const apiUrl = `https://api.github.com/repos/${CONFIG.GH_OWNER}/${CONFIG.GH_REPO}/actions/workflows/${CONFIG.GH_WORKFLOW_ID}/runs?per_page=1&branch=master`;
+    const res = await fetch(apiUrl, {
+      headers: {
+        'Authorization': `token ${CONFIG.GH_PAT}`,
+        'Accept': 'application/vnd.github.v3+json',
+      },
+    });
+
+    if (!res.ok) return;
+
+    const data = await res.json();
+    const run = data.workflow_runs && data.workflow_runs[0];
+    if (!run) return;
+
+    const elapsed = _formatElapsed(Date.now() - _pipelineStartTime);
+    const runUrl = run.html_url;
+
+    // 상태 매핑
+    if (run.status === 'queued') {
+      _showStatus('running', '파이프라인 대기 중...', elapsed, runUrl);
+    } else if (run.status === 'in_progress') {
+      _showStatus('running', '파이프라인 실행 중...', elapsed, runUrl);
+    } else if (run.status === 'completed') {
+      _stopPolling();
+      if (run.conclusion === 'success') {
+        _showStatus('success', '파이프라인 완료! 페이지를 새로고침하면 결과를 확인할 수 있습니다.', elapsed, runUrl);
+        // 5초 후 자동 새로고침 안내
+        setTimeout(() => {
+          if (confirm('파이프라인이 완료되었습니다. 페이지를 새로고침할까요?')) {
+            location.reload();
+          }
+        }, 2000);
+      } else {
+        _showStatus('failed', `파이프라인 실패 (${run.conclusion}). Actions 로그를 확인해 주세요.`, elapsed, runUrl);
+      }
+    }
+  } catch (e) {
+    console.error('Status poll error:', e);
+  }
+}
+
+function _stopPolling() {
+  if (_pollTimer) {
+    clearInterval(_pollTimer);
+    _pollTimer = null;
+  }
+}
+
+function _showStatus(state, text, elapsed, runUrl) {
+  const bar = document.getElementById('pipeline-status');
+  bar.style.display = 'block';
+  bar.className = `pipeline-status ${state}`;
+
+  const iconMap = { running: '\u25F7', success: '\u2714', failed: '\u2718' };
+  document.getElementById('pipeline-status-icon').textContent = iconMap[state] || '';
+  document.getElementById('pipeline-status-text').textContent = text;
+  document.getElementById('pipeline-status-time').textContent = elapsed ? `(${elapsed})` : '';
+
+  const link = document.getElementById('pipeline-status-link');
+  if (runUrl) {
+    link.href = runUrl;
+    link.style.display = 'inline';
+  } else {
+    link.style.display = 'none';
+  }
+}
+
+function _formatElapsed(ms) {
+  const sec = Math.floor(ms / 1000);
+  if (sec < 60) return `${sec}초`;
+  const min = Math.floor(sec / 60);
+  const remainSec = sec % 60;
+  return `${min}분 ${remainSec}초`;
+}
+
+// 페이지 로드 시 진행 중인 파이프라인이 있으면 표시
+async function _checkActiveRun() {
+  if (!CONFIG.GH_PAT) return;
+  try {
+    const apiUrl = `https://api.github.com/repos/${CONFIG.GH_OWNER}/${CONFIG.GH_REPO}/actions/workflows/${CONFIG.GH_WORKFLOW_ID}/runs?per_page=1&branch=master&status=in_progress`;
+    const res = await fetch(apiUrl, {
+      headers: {
+        'Authorization': `token ${CONFIG.GH_PAT}`,
+        'Accept': 'application/vnd.github.v3+json',
+      },
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.workflow_runs && data.workflow_runs.length > 0) {
+      _pipelineStartTime = new Date(data.workflow_runs[0].created_at).getTime();
+      _showStatus('running', '파이프라인 실행 중...', _formatElapsed(Date.now() - _pipelineStartTime), data.workflow_runs[0].html_url);
+      if (!_pollTimer) {
+        _pollTimer = setInterval(() => _pollStatus(), 15000);
+      }
+    }
+  } catch (e) { /* silent */ }
+}
+
+document.addEventListener('DOMContentLoaded', () => setTimeout(_checkActiveRun, 2000));
 
 // ──────────────────────────────────────────────
 // 공통: workflow_dispatch API 호출
@@ -99,30 +211,6 @@ function _checkGitHubConfig() {
     return false;
   }
   return true;
-}
-
-// ──────────────────────────────────────────────
-// 설정 모달
-// ──────────────────────────────────────────────
-
-function openSettingsModal() {
-  document.getElementById('settings-modal').style.display = 'flex';
-  document.getElementById('settings-pat').value = CONFIG.GH_PAT || '';
-}
-
-function closeSettingsModal() {
-  document.getElementById('settings-modal').style.display = 'none';
-}
-
-function saveSettings() {
-  const pat = document.getElementById('settings-pat').value.trim();
-  if (!pat) {
-    showNotification('PAT을 입력해 주세요.', 'error');
-    return;
-  }
-  CONFIG.GH_PAT = pat;
-  closeSettingsModal();
-  showNotification('설정이 저장되었습니다.', 'success');
 }
 
 async function _dispatchWorkflow(inputs) {
@@ -156,4 +244,28 @@ async function _dispatchWorkflow(inputs) {
     showNotification('실행 요청에 실패했습니다. 네트워크를 확인해 주세요.', 'error');
     return false;
   }
+}
+
+// ──────────────────────────────────────────────
+// 설정 모달
+// ──────────────────────────────────────────────
+
+function openSettingsModal() {
+  document.getElementById('settings-modal').style.display = 'flex';
+  document.getElementById('settings-pat').value = CONFIG.GH_PAT || '';
+}
+
+function closeSettingsModal() {
+  document.getElementById('settings-modal').style.display = 'none';
+}
+
+function saveSettings() {
+  const pat = document.getElementById('settings-pat').value.trim();
+  if (!pat) {
+    showNotification('PAT을 입력해 주세요.', 'error');
+    return;
+  }
+  CONFIG.GH_PAT = pat;
+  closeSettingsModal();
+  showNotification('설정이 저장되었습니다.', 'success');
 }

@@ -56,6 +56,92 @@ body {
   color: var(--color-text-secondary);
 }
 
+/* ── 파이프라인 상태 바 ── */
+.pipeline-status {
+  background: #eff6ff;
+  border-bottom: 1px solid #bfdbfe;
+  padding: 10px 24px;
+}
+
+.pipeline-status.running {
+  background: #eff6ff;
+  border-bottom-color: #93c5fd;
+}
+
+.pipeline-status.success {
+  background: #f0fdf4;
+  border-bottom-color: #86efac;
+}
+
+.pipeline-status.failed {
+  background: #fef2f2;
+  border-bottom-color: #fca5a5;
+}
+
+.pipeline-status-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.pipeline-icon {
+  font-size: 18px;
+  display: inline-block;
+}
+
+.pipeline-status.running .pipeline-icon {
+  animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.pipeline-time {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+.pipeline-link {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.pipeline-link:hover {
+  text-decoration: underline;
+}
+
+.pipeline-progress {
+  margin-top: 6px;
+  height: 3px;
+  background: #dbeafe;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.pipeline-status.success .pipeline-progress,
+.pipeline-status.failed .pipeline-progress {
+  display: none;
+}
+
+.pipeline-progress-bar {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 2px;
+  width: 0%;
+  animation: progress-indeterminate 2s ease-in-out infinite;
+}
+
+@keyframes progress-indeterminate {
+  0% { width: 0%; margin-left: 0; }
+  50% { width: 40%; margin-left: 30%; }
+  100% { width: 0%; margin-left: 100%; }
+}
+
 /* ── 버튼 ── */
 .btn {
   padding: 8px 16px;

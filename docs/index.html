@@ -53,6 +53,19 @@
     </div>
   </div>
 
+  <!-- 파이프라인 상태 바 -->
+  <div id="pipeline-status" class="pipeline-status" style="display:none;">
+    <div class="pipeline-status-inner">
+      <span id="pipeline-status-icon" class="pipeline-icon">&#9696;</span>
+      <span id="pipeline-status-text">파이프라인 실행 중...</span>
+      <span id="pipeline-status-time" class="pipeline-time"></span>
+      <a id="pipeline-status-link" class="pipeline-link" href="#" target="_blank" rel="noopener">Actions에서 보기</a>
+    </div>
+    <div class="pipeline-progress">
+      <div id="pipeline-progress-bar" class="pipeline-progress-bar"></div>
+    </div>
+  </div>
+
   <!-- 메인 콘텐츠 -->
   <main id="main-content" class="main-content">
     <div id="loading" class="loading">데이터를 불러오는 중...</div>
