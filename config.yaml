@@ -37,7 +37,7 @@ committees:
     name: "보건복지위원회"
     search_terms: ["복지위", "보건복지위원회"]
 
-# Company names for highlight detection (자사 및 관련 회사)
+# Company names for highlight detection (주요 게임사)
 company_names:
   - "넥슨"
   - "엔씨소프트"

@@ -118,7 +118,7 @@ def main():
 
     for i, agenda in enumerate(agendas):
         tag = "[게임]" if agenda.get("category") == "game" else "[일반]"
-        company = " ★자사언급" if agenda.get("is_company_mentioned") else ""
+        company = " ★게임사언급" if agenda.get("is_company_mentioned") else ""
         print(f"\n{i+1}. {tag}{company} {agenda.get('title', '')}")
         print(f"   {agenda.get('summary', '')}")
 

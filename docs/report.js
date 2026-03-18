@@ -77,7 +77,7 @@ function formatReport(date, agendas) {
         report += `  ${prefix} ${party}${s.speaker_name}: ${s.content}\n`;
       });
 
-      // 자사 관련
+      // 게임사 언급
       if (agenda.isCompanyMentioned && agenda.company_mention_detail) {
         report += `※ ${agenda.company_mention_detail}\n`;
       }

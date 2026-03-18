@@ -17,7 +17,7 @@ def get_pass1_system_prompt(company_names: list[str]) -> str:
       "category": "game" 또는 "general",
       "summary": "1-2줄 요약",
       "is_company_mentioned": true 또는 false,
-      "company_mention_detail": "자사 언급 내용 (없으면 빈 문자열)",
+      "company_mention_detail": "게임사 언급 내용 (없으면 빈 문자열)",
       "statements": [
         {{
           "speaker_name": "의원 또는 답변자 이름",
@@ -44,7 +44,7 @@ def get_pass1_system_prompt(company_names: list[str]) -> str:
 - statements 배열을 빈 배열 []로 작성
 - summary는 1줄로 간결하게
 
-## 자사 회사 목록
+## 주요 게임사 목록
 {companies}
 
 ## 작성 규칙
@@ -53,7 +53,7 @@ def get_pass1_system_prompt(company_names: list[str]) -> str:
 2. 당적 추론: "더불어민주당" → 민, "국민의힘" → 국, "조국혁신당" → 조, "진보당" → 진, "개혁신당" → 개, 무소속 → 무
 3. 답변자(장관, 위원장, 기관장 등)의 speaker_party는 빈 문자열
 4. game 안건의 statements에는 주요 질의 의원과 답변자를 모두 포함
-5. 자사 회사가 직접 언급되면 is_company_mentioned=true, company_mention_detail에 맥락 기술
+5. 주요 게임사가 직접 언급되면 is_company_mentioned=true, company_mention_detail에 맥락 기술
 6. 모든 텍스트는 한국어로 작성
 7. 안건이 없으면 빈 agendas 배열 반환"""
 

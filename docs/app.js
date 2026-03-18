@@ -331,7 +331,7 @@ function updateStats(filtered) {
   const gameCount = filtered.filter(a => a.category === 'game').length;
   document.getElementById('stats-game').textContent = `게임 관련 ${gameCount}건`;
   const companyCount = filtered.filter(a => a.isCompanyMentioned).length;
-  document.getElementById('stats-company').textContent = `자사 언급 ${companyCount}건`;
+  document.getElementById('stats-company').textContent = `게임사 언급 ${companyCount}건`;
 }
 
 async function refreshData() {
