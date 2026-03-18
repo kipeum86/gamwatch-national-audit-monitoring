@@ -47,18 +47,30 @@ def _extract_json(text: str) -> str:
     # ```json ... ``` 블록이 있는 경우
     if "```json" in text:
         start = text.index("```json") + 7
-        end = text.index("```", start)
+        end = text.find("```", start)
+        if end == -1:
+            # 닫는 ``` 없으면 끝까지
+            return text[start:].strip()
         return text[start:end].strip()
 
     # ``` ... ``` 블록이 있는 경우
     if "```" in text:
         start = text.index("```") + 3
-        end = text.index("```", start)
+        end = text.find("```", start)
+        if end == -1:
+            return text[start:].strip()
         return text[start:end].strip()
 
     # { 로 시작하는 JSON 직접 반환
     text = text.strip()
     if text.startswith("{"):
         return text
+
+    # { ... } 블록을 찾아서 추출
+    brace_start = text.find("{")
+    if brace_start != -1:
+        brace_end = text.rfind("}")
+        if brace_end > brace_start:
+            return text[brace_start:brace_end + 1]
 
     raise ValueError(f"JSON을 찾을 수 없음: {text[:200]}")
