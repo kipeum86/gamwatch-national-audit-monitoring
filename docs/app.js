@@ -8,6 +8,10 @@ let allStatements = [];
 let allNewsArticles = [];
 let dataModel = []; // 안건 기준 join된 최종 모델
 let allExpanded = false;
+const LOAD_MORE_SIZE = 10;
+let _currentFiltered = [];
+let _currentSearch = '';
+let _visibleGroups = 0;
 
 // ──────────────────────────────────────────────
 // 유틸: Sheets 날짜 시리얼 넘버 → YYYY-MM-DD 변환
@@ -197,33 +201,58 @@ function applyFilters() {
 // ──────────────────────────────────────────────
 
 function renderAgendas(agendas, searchTerm) {
+  // 필터 변경 시 초기화
+  _currentFiltered = agendas;
+  _currentSearch = searchTerm;
+  _visibleGroups = 0;
+
   const container = document.getElementById('agenda-list');
   const emptyState = document.getElementById('empty-state');
 
   if (agendas.length === 0) {
     container.innerHTML = '';
     emptyState.style.display = 'block';
+    _hideLoadMore();
     return;
   }
 
   emptyState.style.display = 'none';
+  container.innerHTML = '';
 
-  // 날짜/상임위별 그룹핑
+  // 처음 10개 그룹 렌더링
+  _loadMoreGroups();
+
+  // 툴바 표시 + 상태 리셋
+  document.getElementById('agenda-toolbar').style.display = agendas.length ? 'flex' : 'none';
+  allExpanded = false;
+  document.getElementById('btn-toggle-all').textContent = '모두 펼치기';
+}
+
+function _getGroupedKeys() {
   const groups = {};
-  agendas.forEach(a => {
+  _currentFiltered.forEach(a => {
     const key = `${a.date}__${a.committee}`;
     if (!groups[key]) groups[key] = { date: a.date, committee: a.committee, agendas: [] };
     groups[key].agendas.push(a);
   });
+  return { groups, sortedKeys: Object.keys(groups).sort().reverse() };
+}
 
-  const sortedKeys = Object.keys(groups).sort().reverse();
+function _loadMoreGroups() {
+  const container = document.getElementById('agenda-list');
+  const { groups, sortedKeys } = _getGroupedKeys();
+  const totalGroups = sortedKeys.length;
+  const end = Math.min(_visibleGroups + LOAD_MORE_SIZE, totalGroups);
 
-  container.innerHTML = sortedKeys.map((key, index) => {
+  for (let i = _visibleGroups; i < end; i++) {
+    const key = sortedKeys[i];
     const g = groups[key];
-    const isFirst = index === 0;
+    const isFirst = i === 0 && _visibleGroups === 0;
     const collapsedClass = isFirst ? '' : 'collapsed';
     const chevron = isFirst ? '&#9660;' : '&#9654;';
-    return `
+
+    const div = document.createElement('div');
+    div.innerHTML = `
       <div class="date-group ${collapsedClass}">
         <div class="date-group-header" onclick="toggleDateGroup(this)">
           <span class="date-group-chevron">${chevron}</span>
@@ -231,16 +260,39 @@ function renderAgendas(agendas, searchTerm) {
           <span class="date-group-count">(${g.agendas.length}건)</span>
         </div>
         <div class="date-group-body">
-          ${g.agendas.map(a => renderAgendaCard(a, searchTerm)).join('')}
+          ${g.agendas.map(a => renderAgendaCard(a, _currentSearch)).join('')}
         </div>
       </div>
     `;
-  }).join('');
+    container.appendChild(div.firstElementChild);
+  }
 
-  // 툴바 표시 + 상태 리셋
-  document.getElementById('agenda-toolbar').style.display = agendas.length ? 'flex' : 'none';
-  allExpanded = false;
-  document.getElementById('btn-toggle-all').textContent = '모두 펼치기';
+  _visibleGroups = end;
+
+  // 더보기 버튼 업데이트
+  const remaining = totalGroups - _visibleGroups;
+  if (remaining > 0) {
+    _showLoadMore(remaining);
+  } else {
+    _hideLoadMore();
+  }
+}
+
+function _showLoadMore(remaining) {
+  const btn = document.getElementById('btn-load-more');
+  if (btn) {
+    btn.textContent = `더보기 (${remaining}개 그룹 남음)`;
+    btn.style.display = 'block';
+  }
+}
+
+function _hideLoadMore() {
+  const btn = document.getElementById('btn-load-more');
+  if (btn) btn.style.display = 'none';
+}
+
+function loadMore() {
+  _loadMoreGroups();
 }
 
 function renderAgendaCard(agenda, searchTerm) {

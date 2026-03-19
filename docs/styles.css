@@ -281,6 +281,27 @@ body {
   margin-bottom: 8px;
 }
 
+/* ── 더보기 버튼 ── */
+.btn-load-more {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  margin-top: 16px;
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.2s;
+}
+
+.btn-load-more:hover {
+  background: #eff6ff;
+}
+
 /* ── 안건 카드 ── */
 .agenda-list {
   display: flex;
