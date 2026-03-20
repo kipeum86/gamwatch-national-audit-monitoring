@@ -86,11 +86,11 @@
 
   <!-- 정보 칩 -->
   <div id="info-chips" class="info-chips" style="display:none;">
-    <button class="info-chip" id="chip-videos" onclick="togglePopover('videos')">
+    <button class="info-chip" id="chip-videos" onclick="event.stopPropagation(); togglePopover('videos')">
       <span class="info-chip-icon">&#9654;</span>
       <span id="chip-videos-label">영상 0건 처리</span>
     </button>
-    <button class="info-chip" id="chip-keywords" onclick="togglePopover('keywords')">
+    <button class="info-chip" id="chip-keywords" onclick="event.stopPropagation(); togglePopover('keywords')">
       <span class="info-chip-icon">&#128270;</span>
       <span id="chip-keywords-label">키워드 0개</span>
     </button>
@@ -98,7 +98,7 @@
     <div id="popover-videos" class="info-popover" style="display:none;">
       <div class="info-popover-header">
         <span class="info-popover-title">처리된 영상 목록</span>
-        <button class="info-popover-close" onclick="closePopover('videos')">&times;</button>
+        <button class="info-popover-close" onclick="event.stopPropagation(); closePopover('videos')">&times;</button>
       </div>
       <div class="info-popover-body" id="popover-videos-body"></div>
     </div>
@@ -106,7 +106,7 @@
     <div id="popover-keywords" class="info-popover" style="display:none;">
       <div class="info-popover-header">
         <span class="info-popover-title">모니터링 키워드</span>
-        <button class="info-popover-close" onclick="closePopover('keywords')">&times;</button>
+        <button class="info-popover-close" onclick="event.stopPropagation(); closePopover('keywords')">&times;</button>
       </div>
       <div class="info-popover-body" id="popover-keywords-body"></div>
     </div>

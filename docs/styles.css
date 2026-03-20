@@ -19,18 +19,18 @@
 }
 
 [data-theme="dark"] {
-  --color-primary: #60a5fa;
-  --color-primary-hover: #93bbfd;
-  --color-game: #60a5fa;
-  --color-company: #fbbf24;
-  --color-bg: #0f172a;
-  --color-surface: #1e293b;
-  --color-border: #334155;
-  --color-text: #e2e8f0;
-  --color-text-secondary: #94a3b8;
-  --color-error: #f87171;
-  --color-success: #4ade80;
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --color-primary: #1d9bd1;
+  --color-primary-hover: #4db8e0;
+  --color-game: #1d9bd1;
+  --color-company: #e8a230;
+  --color-bg: #1a1d21;
+  --color-surface: #222529;
+  --color-border: #383a3e;
+  --color-text: #d1d2d3;
+  --color-text-secondary: #9a9b9d;
+  --color-error: #e05555;
+  --color-success: #2eb67d;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 * {
@@ -1129,7 +1129,7 @@ mark {
   margin-top: 8px;
 }
 
-/* ── 다크모드 오버라이드 (하드코딩된 색상) ── */
+/* ── 다크모드 오버라이드 (Slack 스타일 중성 회색) ── */
 [data-theme="dark"] .filter-group select,
 [data-theme="dark"] .filter-group input {
   background: var(--color-surface);
@@ -1138,62 +1138,62 @@ mark {
 }
 
 [data-theme="dark"] .agenda-badge.game {
-  background: #1e3a5f;
-  color: #93bbfd;
+  background: #1a3a4a;
+  color: #5ec4e8;
 }
 
 [data-theme="dark"] .agenda-badge.general {
-  background: #334155;
-  color: #94a3b8;
+  background: #2e3034;
+  color: #9a9b9d;
 }
 
 [data-theme="dark"] .agenda-badge.event-type {
-  background: #14532d;
-  color: #86efac;
-  border-color: #166534;
+  background: #1a3329;
+  color: #6ec89b;
+  border-color: #2a5940;
 }
 
 [data-theme="dark"] .company-highlight {
-  background: #422006;
+  background: #3a2e1a;
   border-left-color: var(--color-company);
 }
 
 [data-theme="dark"] .statement {
-  border-bottom-color: #334155;
+  border-bottom-color: var(--color-border);
 }
 
 [data-theme="dark"] .statement-role.questioner {
-  background: #450a0a;
-  color: #fca5a5;
+  background: #3d2424;
+  color: #e88b8b;
 }
 
 [data-theme="dark"] .statement-role.respondent {
-  background: #0c4a6e;
-  color: #7dd3fc;
+  background: #1a3340;
+  color: #7ac4e0;
 }
 
 [data-theme="dark"] mark {
-  background: #854d0e;
-  color: #fef08a;
+  background: #5a4420;
+  color: #f0d87a;
 }
 
 [data-theme="dark"] .pipeline-status {
-  background: #1e3a5f;
-  border-bottom-color: #1e40af;
+  background: #1a2e3a;
+  border-bottom-color: #2a4555;
 }
 
 [data-theme="dark"] .pipeline-status.success {
-  background: #14532d;
-  border-bottom-color: #166534;
+  background: #1a3329;
+  border-bottom-color: #2a5940;
 }
 
 [data-theme="dark"] .pipeline-status.failed {
-  background: #450a0a;
-  border-bottom-color: #991b1b;
+  background: #3d2424;
+  border-bottom-color: #5a3030;
 }
 
 [data-theme="dark"] .pipeline-progress {
-  background: #1e3a5f;
+  background: #2e3034;
 }
 
 [data-theme="dark"] .report-preview pre {
@@ -1203,59 +1203,59 @@ mark {
 }
 
 [data-theme="dark"] .report-comm-header {
-  background: #0f172a;
+  background: #1a1d21;
 }
 
 [data-theme="dark"] .report-agenda-item {
-  border-bottom-color: #334155;
+  border-bottom-color: var(--color-border);
 }
 
 [data-theme="dark"] .report-agenda-item:hover {
-  background: #0f172a;
+  background: #1a1d21;
 }
 
 [data-theme="dark"] .report-badge.game {
-  background: #1e3a5f;
-  color: #93bbfd;
+  background: #1a3a4a;
+  color: #5ec4e8;
 }
 
 [data-theme="dark"] .report-badge.company {
-  background: #422006;
-  color: #fbbf24;
+  background: #3a2e1a;
+  color: #e8a230;
 }
 
 [data-theme="dark"] .notification.success {
-  background: #14532d;
-  color: #86efac;
+  background: #1a3329;
+  color: #6ec89b;
 }
 
 [data-theme="dark"] .notification.error {
-  background: #450a0a;
-  color: #fca5a5;
+  background: #3d2424;
+  color: #e88b8b;
 }
 
 [data-theme="dark"] .notification.info {
-  background: #1e3a5f;
-  color: #93bbfd;
+  background: #1a2e3a;
+  color: #5ec4e8;
 }
 
 [data-theme="dark"] .subtitle-status {
-  background: #1e3a5f;
-  color: #93bbfd;
-  border-color: #1e40af;
+  background: #1a2e3a;
+  color: #5ec4e8;
+  border-color: #2a4555;
 }
 
 [data-theme="dark"] .transcript-guide-toggle {
-  background: #0f172a;
+  background: #1a1d21;
   color: var(--color-primary);
 }
 
 [data-theme="dark"] .transcript-guide-toggle:hover {
-  background: #1e3a5f;
+  background: #2e3034;
 }
 
 [data-theme="dark"] .btn-load-more:hover {
-  background: #1e3a5f;
+  background: #2e3034;
 }
 
 [data-theme="dark"] .btn-secondary {
@@ -1264,7 +1264,7 @@ mark {
 }
 
 [data-theme="dark"] .btn-secondary:hover {
-  background: #475569;
+  background: #4a4c50;
 }
 
 [data-theme="dark"] .btn-icon {
@@ -1277,7 +1277,7 @@ mark {
 }
 
 [data-theme="dark"] .date-group-header:hover {
-  background: #334155;
+  background: #2e3034;
 }
 
 [data-theme="dark"] .auth-input {
@@ -1299,57 +1299,57 @@ mark {
 }
 
 [data-theme="dark"] .info-chip:hover {
-  background: #334155;
+  background: #2e3034;
 }
 
 [data-theme="dark"] .info-chip.active {
-  background: #1e3a5f;
+  background: #1a2e3a;
 }
 
 [data-theme="dark"] .info-popover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
 [data-theme="dark"] .keyword-tag {
-  background: #334155;
+  background: #2e3034;
   color: var(--color-text);
 }
 
 [data-theme="dark"] .keyword-tag.exclude {
-  background: #450a0a;
-  color: #fca5a5;
+  background: #3d2424;
+  color: #e88b8b;
 }
 
 [data-theme="dark"] .keyword-tag.user-added {
-  background: #1e3a5f;
+  background: #1a2e3a;
   color: var(--color-primary);
 }
 
 [data-theme="dark"] .keyword-tag.user-added.exclude {
-  background: #450a0a;
-  color: #fca5a5;
+  background: #3d2424;
+  color: #e88b8b;
   border-color: var(--color-error);
 }
 
 [data-theme="dark"] .status-badge.success {
-  background: #14532d;
-  color: #86efac;
+  background: #1a3329;
+  color: #6ec89b;
 }
 
 [data-theme="dark"] .status-badge.error {
-  background: #450a0a;
-  color: #fca5a5;
+  background: #3d2424;
+  color: #e88b8b;
 }
 
 [data-theme="dark"] .status-badge.no_subtitle {
-  background: #422006;
-  color: #fbbf24;
+  background: #3a2e1a;
+  color: #e8a230;
 }
 
 [data-theme="dark"] .transcript-guide kbd {
-  background: #334155;
-  border-color: #475569;
-  box-shadow: 0 1px 0 #1e293b;
+  background: #2e3034;
+  border-color: #4a4c50;
+  box-shadow: 0 1px 0 #1a1d21;
   color: var(--color-text);
 }
 

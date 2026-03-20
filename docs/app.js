@@ -586,7 +586,10 @@ function togglePopover(type) {
   if (type === 'videos') renderVideosPopover();
   else renderKeywordsPopover();
 
-  document.getElementById(`popover-${type}`).style.display = 'block';
+  const popover = document.getElementById(`popover-${type}`);
+  popover.style.display = 'block';
+  // 팝오버 내부 클릭 시 바깥 클릭으로 처리 방지
+  popover.onclick = function(e) { e.stopPropagation(); };
   document.getElementById(`chip-${type}`).classList.add('active');
   _activePopover = type;
 
