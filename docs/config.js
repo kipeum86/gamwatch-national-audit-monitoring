@@ -26,5 +26,7 @@ const CONFIG = {
     AGENDAS: 'agendas',
     STATEMENTS: 'statements',
     NEWS_ARTICLES: 'news_articles',
+    PROCESSED_VIDEOS: '_processed_videos',
+    KEYWORDS: '_keywords',
   },
 };

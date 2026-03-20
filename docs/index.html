@@ -28,6 +28,7 @@
       <p class="header-subtitle">국정감사 게임산업 모니터링</p>
     </div>
     <div class="header-right">
+      <button id="btn-theme" class="btn btn-icon btn-theme" onclick="toggleTheme()" title="다크모드 전환">&#9790;</button>
       <button id="btn-refresh" class="btn btn-icon" onclick="refreshData()" title="새로고침">&#8635;</button>
       <button class="btn btn-icon" onclick="openSettingsModal()" title="설정">&#9881;</button>
       <button class="btn btn-secondary" onclick="openManualModal()">영상 분석 요청</button>
@@ -81,6 +82,34 @@
     <span id="stats-game">게임 관련 0건</span>
     <span class="stats-divider">|</span>
     <span id="stats-company">게임사 언급 0건</span>
+  </div>
+
+  <!-- 정보 칩 -->
+  <div id="info-chips" class="info-chips" style="display:none;">
+    <button class="info-chip" id="chip-videos" onclick="togglePopover('videos')">
+      <span class="info-chip-icon">&#9654;</span>
+      <span id="chip-videos-label">영상 0건 처리</span>
+    </button>
+    <button class="info-chip" id="chip-keywords" onclick="togglePopover('keywords')">
+      <span class="info-chip-icon">&#128270;</span>
+      <span id="chip-keywords-label">키워드 0개</span>
+    </button>
+    <!-- 팝오버: 처리된 영상 -->
+    <div id="popover-videos" class="info-popover" style="display:none;">
+      <div class="info-popover-header">
+        <span class="info-popover-title">처리된 영상 목록</span>
+        <button class="info-popover-close" onclick="closePopover('videos')">&times;</button>
+      </div>
+      <div class="info-popover-body" id="popover-videos-body"></div>
+    </div>
+    <!-- 팝오버: 키워드 -->
+    <div id="popover-keywords" class="info-popover" style="display:none;">
+      <div class="info-popover-header">
+        <span class="info-popover-title">모니터링 키워드</span>
+        <button class="info-popover-close" onclick="closePopover('keywords')">&times;</button>
+      </div>
+      <div class="info-popover-body" id="popover-keywords-body"></div>
+    </div>
   </div>
 
   <!-- 파이프라인 상태 바 -->

@@ -64,7 +64,7 @@ function openManualModal() {
 }
 
 function closeManualModal() {
-  document.getElementById('manual-modal').style.display = 'none';
+  closeModalAnimated('manual-modal');
 }
 
 async function submitManualVideo() {
@@ -504,7 +504,7 @@ function openSettingsModal() {
 }
 
 function closeSettingsModal() {
-  document.getElementById('settings-modal').style.display = 'none';
+  closeModalAnimated('settings-modal');
 }
 
 function saveSettings() {

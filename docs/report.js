@@ -31,7 +31,7 @@ function openReportModal() {
 }
 
 function closeReportModal() {
-  document.getElementById('report-modal').style.display = 'none';
+  closeModalAnimated('report-modal');
 }
 
 // ──────────────────────────────────────────────

@@ -2,16 +2,70 @@
  * GamWatch 대시보드 — 데이터 fetch, 렌더링, 필터, 검색.
  */
 
+// ── 다크모드 ──
+function initTheme() {
+  const saved = localStorage.getItem('gamwatch_theme');
+  if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+  updateThemeIcon();
+}
+
+function toggleTheme() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (isDark) {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('gamwatch_theme', 'light');
+  } else {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    localStorage.setItem('gamwatch_theme', 'dark');
+  }
+  updateThemeIcon();
+}
+
+function updateThemeIcon() {
+  const btn = document.getElementById('btn-theme');
+  if (!btn) return;
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  btn.innerHTML = isDark ? '&#9788;' : '&#9790;';
+  btn.title = isDark ? '라이트모드 전환' : '다크모드 전환';
+}
+
+initTheme();
+
 // 전역 데이터 저장소
 let allAgendas = [];
 let allStatements = [];
 let allNewsArticles = [];
+let allProcessedVideos = [];
+let allUserKeywords = [];
 let dataModel = []; // 안건 기준 join된 최종 모델
 let allExpanded = false;
 const LOAD_MORE_SIZE = 10;
 let _currentFiltered = [];
 let _currentSearch = '';
 let _visibleGroups = 0;
+let _activePopover = null;
+
+// 기본 키워드 (pipeline/config.py 미러링)
+const DEFAULT_INCLUDE_KEYWORDS = [
+  "게임", "게임산업", "게임업계", "온라인게임", "모바일게임", "PC게임",
+  "콘솔게임", "비디오게임", "게임사",
+  "확률형 아이템", "가챠", "셧다운제", "게임 이용등급", "게임물등급위원회",
+  "게임물관리위원회", "게임 과몰입", "게임 중독", "게임 사행성",
+  "게임 규제", "게임 셧다운", "게임법", "게임 자율규제",
+  "e스포츠", "이스포츠", "esports", "프로게이머",
+  "게임 콘텐츠", "게임 수출", "게임 시장",
+  "게임 개발", "게임 엔진",
+];
+const DEFAULT_EXCLUDE_KEYWORDS = [
+  "게임 체인저", "게임체인저",
+  "머니 게임", "머니게임",
+  "치킨 게임", "치킨게임",
+  "제로섬 게임", "제로섬게임",
+  "블레임 게임", "블레임게임",
+  "네임 게임", "네임게임",
+];
 
 // ──────────────────────────────────────────────
 // 유틸: Sheets 날짜 시리얼 넘버 → YYYY-MM-DD 변환
@@ -40,19 +94,36 @@ function _fixDate(val) {
 document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
+  _showSkeletonLoading();
   try {
     await loadAllData();
     buildDataModel();
     populateFilters();
     applyFilters();
+    renderInfoChips();
     document.getElementById('loading').style.display = 'none';
     document.getElementById('last-updated').textContent =
       `마지막 로드: ${new Date().toLocaleString('ko-KR')}`;
   } catch (e) {
-    document.getElementById('loading').textContent =
-      '데이터를 불러올 수 없습니다. 설정을 확인해 주세요.';
+    document.getElementById('loading').innerHTML =
+      '<p>데이터를 불러올 수 없습니다. 설정을 확인해 주세요.</p>';
     console.error('Init error:', e);
   }
+}
+
+function _showSkeletonLoading() {
+  const container = document.getElementById('loading');
+  let html = '';
+  for (let i = 0; i < 4; i++) {
+    html += `
+      <div class="skeleton-card">
+        <div class="skeleton-line skeleton-line-badge"></div>
+        <div class="skeleton-line skeleton-line-short"></div>
+        <div class="skeleton-line skeleton-line-long"></div>
+        <div class="skeleton-line skeleton-line-medium"></div>
+      </div>`;
+  }
+  container.innerHTML = html;
 }
 
 // ──────────────────────────────────────────────
@@ -68,6 +139,14 @@ async function loadAllData() {
   allAgendas = agendas;
   allStatements = statements;
   allNewsArticles = news;
+
+  // 정보 칩 데이터 (실패해도 메인 로드에 영향 없음)
+  const [videosResult, keywordsResult] = await Promise.allSettled([
+    fetchSheetData(CONFIG.TABS.PROCESSED_VIDEOS),
+    fetchSheetData(CONFIG.TABS.KEYWORDS),
+  ]);
+  allProcessedVideos = videosResult.status === 'fulfilled' ? videosResult.value : [];
+  allUserKeywords = keywordsResult.status === 'fulfilled' ? keywordsResult.value : [];
 }
 
 async function fetchSheetData(tabName) {
@@ -422,6 +501,7 @@ async function refreshData() {
     resetFilterOptions();
     populateFilters();
     applyFilters();
+    renderInfoChips();
     document.getElementById('last-updated').textContent =
       `마지막 로드: ${new Date().toLocaleString('ko-KR')}`;
     showNotification('새로고침 완료', 'success');
@@ -476,11 +556,163 @@ function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// ──────────────────────────────────────────────
+// 정보 칩 + 팝오버
+// ──────────────────────────────────────────────
+
+function renderInfoChips() {
+  const container = document.getElementById('info-chips');
+  if (!container) return;
+
+  const videoCount = allProcessedVideos.length;
+  const userInclude = allUserKeywords.filter(k => (k.type || 'include') === 'include');
+  const userExclude = allUserKeywords.filter(k => k.type === 'exclude');
+  const totalInclude = DEFAULT_INCLUDE_KEYWORDS.length + userInclude.length;
+  const totalExclude = DEFAULT_EXCLUDE_KEYWORDS.length + userExclude.length;
+
+  document.getElementById('chip-videos-label').textContent = `영상 ${videoCount}건 처리`;
+  document.getElementById('chip-keywords-label').textContent = `키워드 ${totalInclude}+${totalExclude}개`;
+
+  container.style.display = 'flex';
+}
+
+function togglePopover(type) {
+  if (_activePopover === type) {
+    closePopover(type);
+    return;
+  }
+  if (_activePopover) closePopover(_activePopover);
+
+  if (type === 'videos') renderVideosPopover();
+  else renderKeywordsPopover();
+
+  document.getElementById(`popover-${type}`).style.display = 'block';
+  document.getElementById(`chip-${type}`).classList.add('active');
+  _activePopover = type;
+
+  setTimeout(() => {
+    document.addEventListener('click', _handlePopoverOutsideClick);
+  }, 0);
+}
+
+function closePopover(type) {
+  const popover = document.getElementById(`popover-${type}`);
+  const chip = document.getElementById(`chip-${type}`);
+  if (popover) popover.style.display = 'none';
+  if (chip) chip.classList.remove('active');
+  _activePopover = null;
+  document.removeEventListener('click', _handlePopoverOutsideClick);
+}
+
+function _handlePopoverOutsideClick(e) {
+  if (!_activePopover) return;
+  const popover = document.getElementById(`popover-${_activePopover}`);
+  const chip = document.getElementById(`chip-${_activePopover}`);
+  if (popover && !popover.contains(e.target) && chip && !chip.contains(e.target)) {
+    closePopover(_activePopover);
+  }
+}
+
+function renderVideosPopover() {
+  const body = document.getElementById('popover-videos-body');
+  if (!allProcessedVideos.length) {
+    body.innerHTML = '<p style="color:var(--color-text-secondary);font-size:13px;">처리된 영상이 없습니다.</p>';
+    return;
+  }
+
+  const sorted = [...allProcessedVideos].sort((a, b) =>
+    (b.date || '').localeCompare(a.date || '')
+  );
+
+  const rows = sorted.map(v => {
+    const statusClass = v.status || 'success';
+    const statusLabel = v.status === 'success' ? '성공'
+      : v.status === 'no_subtitle' ? '자막없음'
+      : v.status === 'error' ? '오류' : (v.status || '');
+    const sourceLabel = v.source === 'auto' ? '자동' : '수동';
+    const title = v.title || '제목없음';
+    const titleHtml = v.video_url
+      ? `<a href="${escapeHtml(v.video_url)}" target="_blank" rel="noopener">${escapeHtml(title)}</a>`
+      : escapeHtml(title);
+
+    return `<tr>
+      <td>${escapeHtml(_fixDate(v.date) || '')}</td>
+      <td>${escapeHtml(v.committee || '')}</td>
+      <td>${titleHtml}</td>
+      <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+      <td>${sourceLabel}</td>
+    </tr>`;
+  }).join('');
+
+  body.innerHTML = `
+    <table class="info-table">
+      <thead><tr>
+        <th>날짜</th><th>상임위</th><th>제목</th><th>상태</th><th>소스</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function renderKeywordsPopover() {
+  const body = document.getElementById('popover-keywords-body');
+  const userInclude = allUserKeywords.filter(k => (k.type || 'include') === 'include');
+  const userExclude = allUserKeywords.filter(k => k.type === 'exclude');
+
+  function renderTags(defaults, userAdded, isExclude) {
+    const cls = isExclude ? ' exclude' : '';
+    const defaultTags = defaults.map(kw =>
+      `<span class="keyword-tag${cls}">${escapeHtml(kw)}</span>`
+    ).join('');
+    const userTags = userAdded.map(k =>
+      `<span class="keyword-tag user-added${cls}" title="${escapeHtml(k.note || '사용자 추가')}">${escapeHtml(k.keyword)}</span>`
+    ).join('');
+    return defaultTags + userTags;
+  }
+
+  body.innerHTML = `
+    <div class="keyword-section">
+      <div class="keyword-section-title">포함 키워드 (기본 ${DEFAULT_INCLUDE_KEYWORDS.length}개${userInclude.length ? ' + 추가 ' + userInclude.length + '개' : ''})</div>
+      <div class="keyword-tags">
+        ${renderTags(DEFAULT_INCLUDE_KEYWORDS, userInclude, false)}
+      </div>
+    </div>
+    <div class="keyword-section">
+      <div class="keyword-section-title">제외 키워드 (기본 ${DEFAULT_EXCLUDE_KEYWORDS.length}개${userExclude.length ? ' + 추가 ' + userExclude.length + '개' : ''})</div>
+      <div class="keyword-tags">
+        ${renderTags(DEFAULT_EXCLUDE_KEYWORDS, userExclude, true)}
+      </div>
+    </div>
+    ${userInclude.length || userExclude.length ? '<p style="font-size:11px;color:var(--color-text-secondary);margin-top:8px;">점선 테두리 = 사용자 추가 키워드</p>' : ''}`;
+}
+
+// ── 모달 닫기 애니메이션 공통 ──
+function closeModalAnimated(modalId, callback) {
+  const modal = document.getElementById(modalId);
+  if (!modal) return;
+  modal.classList.add('closing');
+  modal.addEventListener('animationend', function handler() {
+    modal.removeEventListener('animationend', handler);
+    modal.style.display = 'none';
+    modal.classList.remove('closing');
+    if (callback) callback();
+  });
+}
+
+let _notifTimer = null;
 function showNotification(message, type) {
   type = type || 'info';
   const el = document.getElementById('notification');
+  if (_notifTimer) clearTimeout(_notifTimer);
+  el.classList.remove('hiding');
   el.textContent = message;
   el.className = `notification ${type}`;
   el.style.display = 'block';
-  setTimeout(() => { el.style.display = 'none'; }, 5000);
+  _notifTimer = setTimeout(() => {
+    el.classList.add('hiding');
+    el.addEventListener('animationend', function handler() {
+      el.removeEventListener('animationend', handler);
+      el.style.display = 'none';
+      el.classList.remove('hiding');
+    });
+  }, 4500);
 }
