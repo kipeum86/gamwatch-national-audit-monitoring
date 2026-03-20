@@ -17,9 +17,17 @@ const INVIDIOUS_INSTANCES = [
 // 전체 파이프라인 실행
 // ──────────────────────────────────────────────
 
-async function triggerPipeline() {
+function triggerPipeline() {
   if (!_checkGitHubConfig()) return;
-  if (!confirm('전체 파이프라인을 실행하시겠습니까?\n(대상 상임위 영상 자동 검색 + 수동 큐 처리)')) return;
+  document.getElementById('confirm-modal').style.display = 'flex';
+}
+
+function cancelPipeline() {
+  closeModalAnimated('confirm-modal');
+}
+
+async function confirmPipeline() {
+  closeModalAnimated('confirm-modal');
 
   const btn = document.getElementById('btn-trigger');
   btn.disabled = true;

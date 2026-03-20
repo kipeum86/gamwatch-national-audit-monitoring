@@ -281,6 +281,29 @@
     </div>
   </div>
 
+  <!-- 파이프라인 실행 확인 모달 -->
+  <div id="confirm-modal" class="modal" style="display:none;">
+    <div class="modal-content modal-small">
+      <div class="modal-header">
+        <h2>파이프라인 실행 확인</h2>
+        <button class="modal-close" onclick="cancelPipeline()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="confirm-description">전체 파이프라인을 실행하면 다음 작업이 수행됩니다:</p>
+        <ul class="confirm-list">
+          <li>대상 상임위 국회 영상을 자동으로 검색</li>
+          <li>자막 추출 후 AI가 게임 산업 관련 내용 분석</li>
+          <li>분석 결과를 Google Sheets에 저장</li>
+        </ul>
+        <p class="confirm-note">GitHub Actions 워크플로우가 실행되며, 완료까지 수 분이 소요될 수 있습니다.</p>
+        <div class="confirm-actions">
+          <button class="btn btn-secondary" onclick="cancelPipeline()">취소</button>
+          <button class="btn btn-primary" onclick="confirmPipeline()">실행</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- 맨 위로 버튼 -->
   <button id="btn-scroll-top" class="btn-scroll-top" onclick="scrollToTop()" title="맨 위로">&#9650;</button>
 
