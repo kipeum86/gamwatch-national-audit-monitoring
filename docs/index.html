@@ -86,30 +86,36 @@
 
   <!-- 정보 칩 -->
   <div id="info-chips" class="info-chips" style="display:none;">
-    <button class="info-chip" id="chip-videos" onclick="event.stopPropagation(); togglePopover('videos')">
+    <button class="info-chip" id="chip-videos" onclick="openInfoModal('videos')">
       <span class="info-chip-icon">&#9654;</span>
       <span id="chip-videos-label">영상 0건 처리</span>
     </button>
-    <button class="info-chip" id="chip-keywords" onclick="event.stopPropagation(); togglePopover('keywords')">
+    <button class="info-chip" id="chip-keywords" onclick="openInfoModal('keywords')">
       <span class="info-chip-icon">&#128270;</span>
       <span id="chip-keywords-label">키워드 0개</span>
     </button>
   </div>
 
-  <!-- 팝오버 (fixed position, body 직속) -->
-  <div id="popover-videos" class="info-popover" style="display:none;" onclick="event.stopPropagation();">
-    <div class="info-popover-header">
-      <span class="info-popover-title">처리된 영상 목록</span>
-      <button class="info-popover-close" onclick="event.stopPropagation(); closePopover('videos')">&times;</button>
+  <!-- 정보 모달: 처리된 영상 -->
+  <div id="modal-videos" class="modal" style="display:none;">
+    <div class="modal-content modal-medium">
+      <div class="modal-header">
+        <h2>처리된 영상 목록</h2>
+        <button class="modal-close" onclick="closeInfoModal('videos')">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-videos-body"></div>
     </div>
-    <div class="info-popover-body" id="popover-videos-body"></div>
   </div>
-  <div id="popover-keywords" class="info-popover" style="display:none;" onclick="event.stopPropagation();">
-    <div class="info-popover-header">
-      <span class="info-popover-title">모니터링 키워드</span>
-      <button class="info-popover-close" onclick="event.stopPropagation(); closePopover('keywords')">&times;</button>
+
+  <!-- 정보 모달: 키워드 -->
+  <div id="modal-keywords" class="modal" style="display:none;">
+    <div class="modal-content modal-medium">
+      <div class="modal-header">
+        <h2>모니터링 키워드</h2>
+        <button class="modal-close" onclick="closeInfoModal('keywords')">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-keywords-body"></div>
     </div>
-    <div class="info-popover-body" id="popover-keywords-body"></div>
   </div>
 
   <!-- 파이프라인 상태 바 -->

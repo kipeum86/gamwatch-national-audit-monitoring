@@ -45,7 +45,6 @@ const LOAD_MORE_SIZE = 10;
 let _currentFiltered = [];
 let _currentSearch = '';
 let _visibleGroups = 0;
-let _activePopover = null;
 let _viewMode = localStorage.getItem('gamwatch_view') || 'card';
 
 // 기본 키워드 (pipeline/config.py 미러링)
@@ -620,52 +619,18 @@ function renderInfoChips() {
   container.style.display = 'flex';
 }
 
-function togglePopover(type) {
-  if (_activePopover === type) {
-    closePopover(type);
-    return;
-  }
-  if (_activePopover) closePopover(_activePopover);
-
-  if (type === 'videos') renderVideosPopover();
-  else renderKeywordsPopover();
-
-  const chip = document.getElementById(`chip-${type}`);
-  const popover = document.getElementById(`popover-${type}`);
-  const rect = chip.getBoundingClientRect();
-
-  popover.style.top = (rect.bottom + 4) + 'px';
-  popover.style.left = Math.max(8, rect.left) + 'px';
-  popover.style.display = 'block';
-
-  chip.classList.add('active');
-  _activePopover = type;
-
-  setTimeout(() => {
-    document.addEventListener('click', _handlePopoverOutsideClick);
-  }, 0);
+function openInfoModal(type) {
+  if (type === 'videos') renderVideosModal();
+  else renderKeywordsModal();
+  document.getElementById(`modal-${type}`).style.display = 'flex';
 }
 
-function closePopover(type) {
-  const popover = document.getElementById(`popover-${type}`);
-  const chip = document.getElementById(`chip-${type}`);
-  if (popover) popover.style.display = 'none';
-  if (chip) chip.classList.remove('active');
-  _activePopover = null;
-  document.removeEventListener('click', _handlePopoverOutsideClick);
+function closeInfoModal(type) {
+  closeModalAnimated(`modal-${type}`);
 }
 
-function _handlePopoverOutsideClick(e) {
-  if (!_activePopover) return;
-  const popover = document.getElementById(`popover-${_activePopover}`);
-  const chip = document.getElementById(`chip-${_activePopover}`);
-  if (popover && !popover.contains(e.target) && chip && !chip.contains(e.target)) {
-    closePopover(_activePopover);
-  }
-}
-
-function renderVideosPopover() {
-  const body = document.getElementById('popover-videos-body');
+function renderVideosModal() {
+  const body = document.getElementById('modal-videos-body');
   if (!allProcessedVideos.length) {
     body.innerHTML = '<p style="color:var(--color-text-secondary);font-size:13px;">처리된 영상이 없습니다.</p>';
     return;
@@ -704,8 +669,8 @@ function renderVideosPopover() {
     </table>`;
 }
 
-function renderKeywordsPopover() {
-  const body = document.getElementById('popover-keywords-body');
+function renderKeywordsModal() {
+  const body = document.getElementById('modal-keywords-body');
   const userInclude = allUserKeywords.filter(k => (k.type || 'include') === 'include');
   const userExclude = allUserKeywords.filter(k => k.type === 'exclude');
 
