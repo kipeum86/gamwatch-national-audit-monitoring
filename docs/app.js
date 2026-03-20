@@ -630,11 +630,15 @@ function togglePopover(type) {
   if (type === 'videos') renderVideosPopover();
   else renderKeywordsPopover();
 
+  const chip = document.getElementById(`chip-${type}`);
   const popover = document.getElementById(`popover-${type}`);
+  const rect = chip.getBoundingClientRect();
+
+  popover.style.top = (rect.bottom + 4) + 'px';
+  popover.style.left = Math.max(8, rect.left) + 'px';
   popover.style.display = 'block';
-  // 팝오버 내부 클릭 시 바깥 클릭으로 처리 방지
-  popover.onclick = function(e) { e.stopPropagation(); };
-  document.getElementById(`chip-${type}`).classList.add('active');
+
+  chip.classList.add('active');
   _activePopover = type;
 
   setTimeout(() => {
