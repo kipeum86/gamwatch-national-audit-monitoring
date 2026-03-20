@@ -133,6 +133,10 @@
       <p>파이프라인을 실행하거나 잠시 후 다시 확인해 주세요.</p>
     </div>
     <div id="agenda-toolbar" class="agenda-toolbar" style="display:none;">
+      <div class="view-toggle">
+        <button id="btn-view-card" class="btn btn-sm btn-view active" onclick="setViewMode('card')" title="카드 뷰">&#9638;</button>
+        <button id="btn-view-list" class="btn btn-sm btn-view" onclick="setViewMode('list')" title="리스트 뷰">&#9776;</button>
+      </div>
       <button id="btn-toggle-all" class="btn btn-sm btn-secondary" onclick="toggleAllDetails()">모두 펼치기</button>
     </div>
     <div id="agenda-list" class="agenda-list"></div>

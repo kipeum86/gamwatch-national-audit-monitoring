@@ -46,6 +46,7 @@ let _currentFiltered = [];
 let _currentSearch = '';
 let _visibleGroups = 0;
 let _activePopover = null;
+let _viewMode = localStorage.getItem('gamwatch_view') || 'card';
 
 // 기본 키워드 (pipeline/config.py 미러링)
 const DEFAULT_INCLUDE_KEYWORDS = [
@@ -297,12 +298,14 @@ function renderAgendas(agendas, searchTerm) {
 
   emptyState.style.display = 'none';
   container.innerHTML = '';
+  container.className = _viewMode === 'list' ? 'agenda-list view-list' : 'agenda-list';
 
   // 처음 10개 그룹 렌더링
   _loadMoreGroups();
 
   // 툴바 표시 + 상태 리셋
   document.getElementById('agenda-toolbar').style.display = agendas.length ? 'flex' : 'none';
+  _updateViewToggle();
   allExpanded = false;
   document.getElementById('btn-toggle-all').textContent = '모두 펼치기';
 }
@@ -339,7 +342,7 @@ function _loadMoreGroups() {
           <span class="date-group-count">(${g.agendas.length}건)</span>
         </div>
         <div class="date-group-body">
-          ${g.agendas.map(a => renderAgendaCard(a, _currentSearch)).join('')}
+          ${g.agendas.map(a => _viewMode === 'list' ? renderAgendaListItem(a, _currentSearch) : renderAgendaCard(a, _currentSearch)).join('')}
         </div>
       </div>
     `;
@@ -403,6 +406,47 @@ function renderAgendaCard(agenda, searchTerm) {
       </div>
     </div>
   `;
+}
+
+function renderAgendaListItem(agenda, searchTerm) {
+  const isGame = agenda.category === 'game';
+  const isMentioned = agenda.isCompanyMentioned;
+
+  const classes = [
+    'agenda-list-item',
+    isGame ? 'game' : '',
+    isMentioned ? 'company-mentioned' : '',
+  ].filter(Boolean).join(' ');
+
+  const title = highlightText(agenda.title, searchTerm);
+
+  return `
+    <div class="${classes}" onclick="toggleDetail(this)">
+      <span class="agenda-badge ${agenda.category}">${isGame ? '게임' : '일반'}</span>
+      ${isMentioned ? '<span class="agenda-list-star">★</span>' : ''}
+      <span class="agenda-title">${title}</span>
+      <span class="agenda-meta">${agenda.committee} · ${agenda.date}</span>
+      <div class="agenda-detail">
+        ${agenda.summary ? `<div class="agenda-summary">${highlightText(agenda.summary, searchTerm)}</div>` : ''}
+        ${isMentioned ? `<div class="company-highlight">${highlightText(agenda.company_mention_detail, searchTerm)}</div>` : ''}
+        ${renderStatements(agenda.statements, searchTerm)}
+        ${renderNews(agenda.newsArticles)}
+      </div>
+    </div>
+  `;
+}
+
+function setViewMode(mode) {
+  _viewMode = mode;
+  localStorage.setItem('gamwatch_view', mode);
+  applyFilters();
+}
+
+function _updateViewToggle() {
+  const cardBtn = document.getElementById('btn-view-card');
+  const listBtn = document.getElementById('btn-view-list');
+  if (cardBtn) cardBtn.classList.toggle('active', _viewMode === 'card');
+  if (listBtn) listBtn.classList.toggle('active', _viewMode === 'list');
 }
 
 function renderStatements(statements, searchTerm) {

@@ -296,6 +296,109 @@ body {
   margin-bottom: 8px;
 }
 
+/* ── 뷰 토글 ── */
+.view-toggle {
+  display: flex;
+  gap: 2px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.btn-view {
+  background: var(--color-surface);
+  border: none;
+  border-radius: 0;
+  padding: 4px 10px;
+  font-size: 16px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-view:hover {
+  background: var(--color-bg);
+}
+
+.btn-view.active {
+  background: var(--color-primary);
+  color: white;
+}
+
+/* ── 리스트 뷰 아이템 ── */
+.agenda-list-item {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  font-size: 14px;
+  background: var(--color-surface);
+  transition: background 0.15s;
+}
+
+.agenda-list-item:first-child {
+  border-top-left-radius: var(--radius);
+  border-top-right-radius: var(--radius);
+}
+
+.agenda-list-item:last-child {
+  border-bottom-left-radius: var(--radius);
+  border-bottom-right-radius: var(--radius);
+  border-bottom: none;
+}
+
+.agenda-list-item:hover {
+  background: var(--color-bg);
+}
+
+.agenda-list-item.game {
+  border-left: 3px solid var(--color-game);
+}
+
+.agenda-list-item.company-mentioned .agenda-list-star {
+  color: var(--color-company);
+}
+
+.agenda-list-star {
+  color: transparent;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.agenda-list-item .agenda-badge {
+  flex-shrink: 0;
+}
+
+.agenda-list-item .agenda-title {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.agenda-list-item .agenda-meta {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.agenda-list-item .agenda-detail {
+  flex-basis: 100%;
+}
+
+/* 리스트 뷰의 date-group-body는 border로 감싸기 */
+.view-list .date-group-body {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
 /* ── 더보기 버튼 ── */
 .btn-load-more {
   display: block;
@@ -1294,6 +1397,20 @@ mark {
   border-color: var(--color-border);
 }
 
+[data-theme="dark"] .btn-view {
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .btn-view:hover {
+  background: #2e3034;
+}
+
+[data-theme="dark"] .btn-view.active {
+  background: var(--color-primary);
+  color: white;
+}
+
 [data-theme="dark"] .info-chip {
   background: var(--color-bg);
 }
@@ -1362,6 +1479,7 @@ mark {
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
   position: relative;
+  z-index: 120;
 }
 
 .info-chip {
@@ -1775,6 +1893,16 @@ mark {
 
   .info-table {
     font-size: 12px;
+  }
+
+  /* 리스트 뷰 */
+  .agenda-list-item {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .agenda-list-item .agenda-meta {
+    display: none;
   }
 
   /* 맨 위로 버튼 */
