@@ -292,8 +292,16 @@ body {
 .loading,
 .empty-state {
   text-align: center;
-  padding: 60px 24px;
+  padding: 80px 24px;
   color: var(--color-text-secondary);
+}
+
+.empty-state::before {
+  content: '📋';
+  display: block;
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.6;
 }
 
 .empty-state p:first-child {
