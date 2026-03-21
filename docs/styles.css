@@ -1330,15 +1330,6 @@ mark {
   background: #2e3034;
 }
 
-[data-theme="dark"] .report-preview pre {
-  background: var(--color-bg);
-  border-color: var(--color-border);
-  color: var(--color-text);
-}
-
-[data-theme="dark"] .report-comm-header {
-  background: #1a1d21;
-}
 
 [data-theme="dark"] .report-agenda-item {
   border-bottom-color: var(--color-border);
@@ -1379,10 +1370,6 @@ mark {
   border-color: #2a4555;
 }
 
-[data-theme="dark"] .transcript-guide-toggle {
-  background: #1a1d21;
-  color: var(--color-primary);
-}
 
 [data-theme="dark"] .transcript-guide-toggle:hover {
   background: #2e3034;
