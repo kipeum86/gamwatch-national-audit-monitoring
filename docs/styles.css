@@ -182,6 +182,10 @@ body {
   background: var(--color-primary-hover);
 }
 
+.btn-primary:active {
+  transform: scale(0.97);
+}
+
 .btn-secondary {
   background: var(--color-border);
   color: var(--color-text);
@@ -189,6 +193,10 @@ body {
 
 .btn-secondary:hover {
   background: #cbd5e1;
+}
+
+.btn-secondary:active {
+  transform: scale(0.97);
 }
 
 .btn-sm {
@@ -970,6 +978,10 @@ mark {
 
 .btn-icon:hover {
   background: var(--color-border);
+}
+
+.btn-icon:active {
+  transform: scale(0.93);
 }
 
 .btn-full {
