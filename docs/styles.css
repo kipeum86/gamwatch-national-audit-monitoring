@@ -269,7 +269,8 @@ body {
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   font-size: 14px;
-  background: white;
+  background: var(--color-surface);
+  color: var(--color-text);
 }
 
 .filter-search {
