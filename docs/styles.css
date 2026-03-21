@@ -778,7 +778,7 @@ mark {
 }
 
 .report-preview pre {
-  background: #f8fafc;
+  background: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 16px;
@@ -831,7 +831,7 @@ mark {
   font-size: 13px;
   font-weight: 700;
   padding: 8px 14px;
-  background: #f8fafc;
+  background: var(--color-bg);
   color: var(--color-text-secondary);
   position: sticky;
   top: 0;
@@ -1063,7 +1063,7 @@ mark {
   font-weight: 600;
   color: var(--color-primary);
   cursor: pointer;
-  background: #f8fafc;
+  background: var(--color-bg);
   list-style: none;
   display: flex;
   align-items: center;
